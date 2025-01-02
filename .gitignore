@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+/.vs/GameProject/FileContentIndex
+/.vs/GameProject/v17
+/GameProject/x64/Debug

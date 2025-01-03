@@ -1,99 +1,55 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="src">
-      <UniqueIdentifier>{6c5463c2-4aee-4115-b005-b44137e234b7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include">
-      <UniqueIdentifier>{c8fa16a4-d4a2-4232-99b1-868a1ae6f2a0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\engine">
-      <UniqueIdentifier>{0800af67-712b-4194-a323-8a52f706c464}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\engine\core">
-      <UniqueIdentifier>{73319421-5afd-4696-9dd7-33bd9f6a9150}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\headers">
-      <UniqueIdentifier>{84af080a-8fe5-41b1-b88f-36c6a225858c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\engine\input">
-      <UniqueIdentifier>{7ac2fe1d-83e6-4b27-8fd3-b339c09b6790}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\headers\input">
-      <UniqueIdentifier>{d21414c8-2d75-493d-9633-a63e0fcb0735}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\engine\renderer">
-      <UniqueIdentifier>{dba8e243-ed6e-4f4e-a745-a65f843a8485}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\headers\resource">
-      <UniqueIdentifier>{1d55493a-fcbe-4f04-9ed9-db84be9621b5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="resources">
-      <UniqueIdentifier>{999eaa63-c523-4f67-b4f0-46c2197bcf8c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\engine\resource">
-      <UniqueIdentifier>{4c00b613-5fa9-49d1-b3b3-e18c3501eef8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\headers\renderer">
-      <UniqueIdentifier>{0fce6dd4-c9c2-48bf-af26-ed73a0019cd5}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="include\header.cpp" />
+    <ClCompile Include="src\engine\character\AttributeSystem.cpp" />
+    <ClCompile Include="src\engine\character\LevelSystem.cpp" />
+    <ClCompile Include="src\engine\collision\BoxCollider.cpp" />
+    <ClCompile Include="src\engine\combat\DamageSystem.cpp" />
+    <ClCompile Include="src\engine\core\Engine.cpp" />
+    <ClCompile Include="src\engine\input\InputManager.cpp" />
+    <ClCompile Include="src\engine\input\InputMapper.cpp" />
+    <ClCompile Include="src\engine\map\mechanism\SequenceMechanism.cpp" />
+    <ClCompile Include="src\engine\map\mechanism\TriggerMechanism.cpp" />
+    <ClCompile Include="src\engine\map\Area.cpp" />
+    <ClCompile Include="src\engine\map\MapManager.cpp" />
+    <ClCompile Include="src\engine\renderer\Animation.cpp" />
+    <ClCompile Include="src\engine\renderer\Renderer.cpp" />
+    <ClCompile Include="src\engine\resource\ResourceManager.cpp" />
+    <ClCompile Include="src\engine\skill\CooldownSystem.cpp" />
+    <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\engine\resource\ConfigValidator.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="glad.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="header.cpp">
-      <Filter>include</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>src\engine\core</Filter>
-    </ClCompile>
-    <ClCompile Include="InputManager.cpp">
-      <Filter>src\engine\input</Filter>
-    </ClCompile>
-    <ClCompile Include="InputMapper.cpp">
-      <Filter>src\engine\input</Filter>
-    </ClCompile>
-    <ClCompile Include="Renderer.cpp">
-      <Filter>src\engine\renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="ResourceManager.cpp">
-      <Filter>src\engine\resource</Filter>
-    </ClCompile>
-    <ClCompile Include="Animation.cpp">
-      <Filter>src\engine\renderer</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Engine.h">
-      <Filter>include\headers</Filter>
-    </ClInclude>
-    <ClInclude Include="InputTypes.h">
-      <Filter>include\headers\input</Filter>
-    </ClInclude>
-    <ClInclude Include="InputManager.h">
-      <Filter>include\headers\input</Filter>
-    </ClInclude>
-    <ClInclude Include="InputMapper.h">
-      <Filter>include\headers\input</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureData.h">
-      <Filter>include\headers\resource</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceManager.h">
-      <Filter>include\headers\resource</Filter>
-    </ClInclude>
-    <ClInclude Include="Renderer.h">
-      <Filter>include\headers\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="SpriteSheet.h">
-      <Filter>include\headers\renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="Animation.h">
-      <Filter>include\headers\renderer</Filter>
-    </ClInclude>
+    <ClInclude Include="include\headers\character\AttributeSystem.h" />
+    <ClInclude Include="include\headers\character\LevelSystem.h" />
+    <ClInclude Include="include\headers\collision\BoxCollider.h" />
+    <ClInclude Include="include\headers\collision\CollisionTypes.h" />
+    <ClInclude Include="include\headers\collision\ICollider.h" />
+    <ClInclude Include="include\headers\combat\CombatStats.h" />
+    <ClInclude Include="include\headers\combat\CombatTypes.h" />
+    <ClInclude Include="include\headers\combat\DamageSystem.h" />
+    <ClInclude Include="include\headers\input\InputManager.h" />
+    <ClInclude Include="include\headers\input\InputMapper.h" />
+    <ClInclude Include="include\headers\input\InputTypes.h" />
+    <ClInclude Include="include\headers\map\mechanism\IEffectTarget.h" />
+    <ClInclude Include="include\headers\map\mechanism\IMechanism.h" />
+    <ClInclude Include="include\headers\map\mechanism\MechanismTypes.h" />
+    <ClInclude Include="include\headers\map\mechanism\SequenceMechanism.h" />
+    <ClInclude Include="include\headers\map\mechanism\TriggerMechanism.h" />
+    <ClInclude Include="include\headers\map\Area.h" />
+    <ClInclude Include="include\headers\map\MapManager.h" />
+    <ClInclude Include="include\headers\map\MapTypes.h" />
+    <ClInclude Include="include\headers\renderer\Animation.h" />
+    <ClInclude Include="include\headers\renderer\Renderer.h" />
+    <ClInclude Include="include\headers\renderer\SpriteSheet.h" />
+    <ClInclude Include="include\headers\resource\resource.h" />
+    <ClInclude Include="include\headers\resource\ResourceManager.h" />
+    <ClInclude Include="include\headers\resource\TextureData.h" />
+    <ClInclude Include="include\headers\skill\CooldownSystem.h" />
+    <ClInclude Include="include\headers\skill\CooldownTypes.h" />
+    <ClInclude Include="include\headers\Engine.h" />
+    <ClInclude Include="include\headers\resource\ConfigValidator.h" />
   </ItemGroup>
 </Project>

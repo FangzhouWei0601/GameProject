@@ -107,6 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,26 +133,56 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Animation.cpp" />
-    <ClCompile Include="Engine.cpp" />
-    <ClCompile Include="glad.c" />
-    <ClCompile Include="header.cpp" />
-    <ClCompile Include="InputManager.cpp" />
-    <ClCompile Include="InputMapper.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="include\header.cpp" />
+    <ClCompile Include="src\engine\character\AttributeSystem.cpp" />
+    <ClCompile Include="src\engine\character\LevelSystem.cpp" />
+    <ClCompile Include="src\engine\collision\BoxCollider.cpp" />
+    <ClCompile Include="src\engine\combat\DamageSystem.cpp" />
+    <ClCompile Include="src\engine\core\Engine.cpp" />
+    <ClCompile Include="src\engine\input\InputManager.cpp" />
+    <ClCompile Include="src\engine\input\InputMapper.cpp" />
+    <ClCompile Include="src\engine\map\Area.cpp" />
+    <ClCompile Include="src\engine\map\MapManager.cpp" />
+    <ClCompile Include="src\engine\map\mechanism\SequenceMechanism.cpp" />
+    <ClCompile Include="src\engine\map\mechanism\TriggerMechanism.cpp" />
+    <ClCompile Include="src\engine\renderer\Animation.cpp" />
+    <ClCompile Include="src\engine\renderer\Renderer.cpp" />
+    <ClCompile Include="src\engine\resource\ConfigValidator.cpp" />
+    <ClCompile Include="src\engine\resource\ResourceManager.cpp" />
+    <ClCompile Include="src\engine\skill\CooldownSystem.cpp" />
+    <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Animation.h" />
-    <ClInclude Include="Engine.h" />
-    <ClInclude Include="InputMapper.h" />
-    <ClInclude Include="InputTypes.h" />
-    <ClInclude Include="InputManager.h" />
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="SpriteSheet.h" />
-    <ClInclude Include="TextureData.h" />
+    <ClInclude Include="include\headers\character\AttributeSystem.h" />
+    <ClInclude Include="include\headers\character\LevelSystem.h" />
+    <ClInclude Include="include\headers\collision\BoxCollider.h" />
+    <ClInclude Include="include\headers\collision\CollisionTypes.h" />
+    <ClInclude Include="include\headers\collision\ICollider.h" />
+    <ClInclude Include="include\headers\combat\CombatStats.h" />
+    <ClInclude Include="include\headers\combat\CombatTypes.h" />
+    <ClInclude Include="include\headers\combat\DamageSystem.h" />
+    <ClInclude Include="include\headers\Engine.h" />
+    <ClInclude Include="include\headers\input\InputManager.h" />
+    <ClInclude Include="include\headers\input\InputMapper.h" />
+    <ClInclude Include="include\headers\input\InputTypes.h" />
+    <ClInclude Include="include\headers\map\Area.h" />
+    <ClInclude Include="include\headers\map\MapManager.h" />
+    <ClInclude Include="include\headers\map\MapTypes.h" />
+    <ClInclude Include="include\headers\map\mechanism\IEffectTarget.h" />
+    <ClInclude Include="include\headers\map\mechanism\IMechanism.h" />
+    <ClInclude Include="include\headers\map\mechanism\MechanismTypes.h" />
+    <ClInclude Include="include\headers\map\mechanism\SequenceMechanism.h" />
+    <ClInclude Include="include\headers\map\mechanism\TriggerMechanism.h" />
+    <ClInclude Include="include\headers\renderer\Animation.h" />
+    <ClInclude Include="include\headers\renderer\Renderer.h" />
+    <ClInclude Include="include\headers\renderer\SpriteSheet.h" />
+    <ClInclude Include="include\headers\resource\ConfigValidator.h" />
+    <ClInclude Include="include\headers\resource\resource.h" />
+    <ClInclude Include="include\headers\resource\ResourceManager.h" />
+    <ClInclude Include="include\headers\resource\TextureData.h" />
+    <ClInclude Include="include\headers\skill\CooldownSystem.h" />
+    <ClInclude Include="include\headers\skill\CooldownTypes.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

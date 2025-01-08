@@ -2,6 +2,7 @@
 #include "MechanismTypes.h"
 #include "../../collision/BoxCollider.h"
 #include <memory>
+#include <iostream>
 
 class IMechanism {
 public:
@@ -22,6 +23,9 @@ public:
 
     void setCollider(std::unique_ptr<BoxCollider> collider) {
         m_collider = std::move(collider);
+        if (m_collider) {
+            std::cout << "Successfully set collider for mechanism: " << m_id << std::endl;
+        }
     }
     BoxCollider* getCollider() const { return m_collider.get(); }
 

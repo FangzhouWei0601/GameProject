@@ -23,9 +23,28 @@ public:
     void run();
     void shutdown();
     bool isRunning() const { return m_isRunning; }
+    bool m_spriteFlipX = false;
+
+    BoxCollider* getPlayerCollider();
     GLFWwindow* getWindow() { return m_window; }
 
+    void setCameraOffset(const glm::vec2& offset) { m_cameraOffset = offset; }
+    const glm::vec2& getCameraOffset() const { return m_cameraOffset; }
+
 private:
+    enum class CharacterState {
+        Idle,
+        Walking,
+        Attacking,
+        Jumping
+        // other state
+    };
+
+    struct CharacterSprites {
+        std::unique_ptr<SpriteSheet> walkSheet;
+        std::unique_ptr<SpriteSheet> idleSheet;
+    };
+
     Engine() : m_window(nullptr), m_isRunning(false) {}
     ~Engine() { shutdown(); }
     Engine(const Engine&) = delete;
@@ -37,6 +56,8 @@ private:
     void handleMovement(float deltaTime);
     void handleCollisions();
 
+    void initializeCameraOffset();
+
     GLFWwindow* m_window;
     bool m_isRunning;
     float m_lastFrame;
@@ -44,14 +65,22 @@ private:
     glm::vec2 m_playerPosition;
     float m_moveSpeed;
 
-    // Sprite management
-    std::unique_ptr<SpriteSheet> m_characterSprites;
+    glm::vec2 getSpriteRenderPosition() const;
+    glm::vec2 getColliderOffset() const;
+
+    static constexpr glm::vec2 SPRITE_SIZE{ 100.0f, 64.0f };
+    static constexpr glm::vec2 COLLIDER_SIZE{ 40.0f, 50.0f };
+
     std::unique_ptr<AnimationController> m_animationController;
-    int m_currentFrame;
-    float m_frameTime;     // Time accumulator for animation
-    float m_frameDuration; // Duration of each frame
+    std::unordered_map<CharacterState, std::unique_ptr<SpriteSheet>> m_stateSprites;
+    CharacterState m_currentState;
+    CharacterSprites m_characterSprites;
+
+    bool m_isWalking;
 
     std::vector<BoxCollider*> m_colliders;  // collision body manage
     BoxCollider* m_playerCollider;          // player collision body
+
+    glm::vec2 m_cameraOffset{ 0.0f, 0.0f };
 
 };

@@ -1,4 +1,3 @@
-// include/headers/map/mechanism/TriggerMechanism.h
 #pragma once
 #include "IMechanism.h"
 #include "IEffectTarget.h"
@@ -10,11 +9,15 @@ public:
         const TriggerCondition& condition,
         const MechanismEffect& effect);
 
+    const std::string& getTargetId() const { return m_effect.targetId; }
+
     void activate() override;
     void deactivate() override;
     void update(float deltaTime) override;
     void reset() override;
-
+    void render();
+    void initializeCollider(const glm::vec2& position, const glm::vec2& size);
+    bool isPlayerInRange(const BoxCollider* playerCollider) const;
     bool checkConditions();
 
     // 添加目标管理
@@ -25,6 +28,9 @@ public:
     void setEffectValue(float value) { m_effect.value = value; }
     void setEffectDuration(float duration) { m_effect.duration = duration; }
     void setEffectDirection(const glm::vec2& direction) { m_effect.direction = direction; }
+
+    bool isActive() const { return m_state == MechanismState::Active; }
+    //const std::string& getTargetId() const { return m_effect.targetId; }
 
 protected:
     IEffectTarget* findTarget(const std::string& id) const;

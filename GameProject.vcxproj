@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="include\header.cpp" />
+    <ClCompile Include="src\engine\camera\Camera.cpp" />
     <ClCompile Include="src\engine\character\AttributeSystem.cpp" />
     <ClCompile Include="src\engine\character\LevelSystem.cpp" />
     <ClCompile Include="src\engine\collision\BoxCollider.cpp" />
@@ -142,9 +143,18 @@
     <ClCompile Include="src\engine\input\InputManager.cpp" />
     <ClCompile Include="src\engine\input\InputMapper.cpp" />
     <ClCompile Include="src\engine\map\Area.cpp" />
+    <ClCompile Include="src\engine\map\AreaTransitionEffect.cpp" />
+    <ClCompile Include="src\engine\map\BackgroundLayer.cpp" />
+    <ClCompile Include="src\engine\map\LayerRenderer.cpp" />
+    <ClCompile Include="src\engine\map\LoadingScreen.cpp" />
     <ClCompile Include="src\engine\map\MapManager.cpp" />
+    <ClCompile Include="src\engine\map\mechanism\DoorMechanism.cpp" />
     <ClCompile Include="src\engine\map\mechanism\SequenceMechanism.cpp" />
     <ClCompile Include="src\engine\map\mechanism\TriggerMechanism.cpp" />
+    <ClCompile Include="src\engine\map\ObjectLayer.cpp" />
+    <ClCompile Include="src\engine\map\portal\PortalEffect.cpp" />
+    <ClCompile Include="src\engine\map\portal\PortalRenderer.cpp" />
+    <ClCompile Include="src\engine\map\portal\PortalSystem.cpp" />
     <ClCompile Include="src\engine\renderer\Animation.cpp" />
     <ClCompile Include="src\engine\renderer\Renderer.cpp" />
     <ClCompile Include="src\engine\resource\ConfigValidator.cpp" />
@@ -154,6 +164,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\headers\camera\Camera.h" />
     <ClInclude Include="include\headers\character\AttributeSystem.h" />
     <ClInclude Include="include\headers\character\LevelSystem.h" />
     <ClInclude Include="include\headers\collision\BoxCollider.h" />
@@ -162,18 +173,29 @@
     <ClInclude Include="include\headers\combat\CombatStats.h" />
     <ClInclude Include="include\headers\combat\CombatTypes.h" />
     <ClInclude Include="include\headers\combat\DamageSystem.h" />
+    <ClInclude Include="include\headers\CommonDefines.h" />
     <ClInclude Include="include\headers\Engine.h" />
     <ClInclude Include="include\headers\input\InputManager.h" />
     <ClInclude Include="include\headers\input\InputMapper.h" />
     <ClInclude Include="include\headers\input\InputTypes.h" />
     <ClInclude Include="include\headers\map\Area.h" />
+    <ClInclude Include="include\headers\map\AreaTransitionEffect.h" />
+    <ClInclude Include="include\headers\map\BackgroundLayer.h" />
+    <ClInclude Include="include\headers\map\ILayer.h" />
+    <ClInclude Include="include\headers\map\LayerRenderer.h" />
+    <ClInclude Include="include\headers\map\LoadingScreen.h" />
     <ClInclude Include="include\headers\map\MapManager.h" />
     <ClInclude Include="include\headers\map\MapTypes.h" />
+    <ClInclude Include="include\headers\map\mechanism\DoorMechanism.h" />
     <ClInclude Include="include\headers\map\mechanism\IEffectTarget.h" />
     <ClInclude Include="include\headers\map\mechanism\IMechanism.h" />
     <ClInclude Include="include\headers\map\mechanism\MechanismTypes.h" />
     <ClInclude Include="include\headers\map\mechanism\SequenceMechanism.h" />
     <ClInclude Include="include\headers\map\mechanism\TriggerMechanism.h" />
+    <ClInclude Include="include\headers\map\ObjectLayer.h" />
+    <ClInclude Include="include\headers\map\portal\PortalEffect.h" />
+    <ClInclude Include="include\headers\map\portal\PortalRenderer.h" />
+    <ClInclude Include="include\headers\map\portal\PortalSystem.h" />
     <ClInclude Include="include\headers\renderer\Animation.h" />
     <ClInclude Include="include\headers\renderer\Renderer.h" />
     <ClInclude Include="include\headers\renderer\SpriteSheet.h" />

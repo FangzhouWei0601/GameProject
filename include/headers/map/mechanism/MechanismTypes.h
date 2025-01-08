@@ -8,7 +8,8 @@ enum class MechanismType {
     Sequence,       
     Breakable,      
     MovingPlatform, 
-    Trap,          
+    Trap,
+    Door,
     BuffZone      
 };
 

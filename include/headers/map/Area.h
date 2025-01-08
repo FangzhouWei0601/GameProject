@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 #include "../../../include/headers/map/mechanism/IMechanism.h"
+#include "LayerRenderer.h"
 
 class Area {
 public:
@@ -30,6 +31,7 @@ public:
 
     virtual void update(float deltaTime);
     virtual void render();
+    void renderMechanisms();
 
     bool containsPoint(const glm::vec2& point) const {
         return m_data.bounds.containsPoint(point);
@@ -42,12 +44,18 @@ public:
 
     bool loadResources();
     void unloadResources();
+    bool initializeRenderer();
+
+    std::unordered_map<std::string, std::unique_ptr<IMechanism>>& getMechanisms() { return m_mechanisms; }
+    void setMechanisms(std::unordered_map<std::string, std::unique_ptr<IMechanism>>&& mechanisms);
 
 private:
     std::unordered_map<std::string, std::unique_ptr<IMechanism>> m_mechanisms;
+    std::unique_ptr<LayerRenderer> m_layerRenderer;
 
     bool loadBackgroundTexture();
     bool loadMechanismConfigs();
+
 
 protected:
     AreaData m_data;

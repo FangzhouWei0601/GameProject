@@ -9,6 +9,11 @@
 #include "../../../include/headers/input/InputMapper.h"
 #include "../../../include/headers/collision/CollisionTypes.h"
 #include "../../../include/headers/collision/BoxCollider.h"
+#include "../../../include/headers/CommonDefines.h"
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    Renderer::getInstance().onWindowResize(width, height);
+}
 
 bool Engine::initialize(const std::string& windowTitle, int width, int height) {
     // Initialize GLFW
@@ -25,7 +30,7 @@ bool Engine::initialize(const std::string& windowTitle, int width, int height) {
     // Create window
     m_window = glfwCreateWindow(width, height, windowTitle.c_str(), nullptr, nullptr);
     if (!m_window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+        DEBUG_LOG_ERROR("Failed to create GLFW window");
         glfwTerminate();
         return false;
     }
@@ -34,7 +39,7 @@ bool Engine::initialize(const std::string& windowTitle, int width, int height) {
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
+        DEBUG_LOG_ERROR("Failed to initialize GLAD");
         return false;
     }
 
@@ -43,66 +48,170 @@ bool Engine::initialize(const std::string& windowTitle, int width, int height) {
     InputMapper::getInstance().setupDefaultBindings();
 
     // Initialize player position and speed
-    m_playerPosition = glm::vec2(width / 2.0f, height / 2.0f);
-    m_moveSpeed = 200.0f; // pixels per second
+    m_playerPosition = glm::vec2(100.0f, 300.0f); 
+    m_moveSpeed = 250.0f;
+
 
     m_isRunning = true;
     m_lastFrame = 0.0f;
 
-    m_playerCollider = new BoxCollider(m_playerPosition, glm::vec2(64.0f, 64.0f));
 
-    auto& resourceManager = ResourceManager::getInstance();
-    if (!resourceManager.loadTexture("test", "E:/tmp/texture/Grass_01-512x512.png")) {
-        std::cerr << "Failed to load test texture" << std::endl;
+    const glm::vec2 SPRITE_SIZE(100.0f, 64.0f);  
+    const float COLLIDER_SCALE = 0.7f;          
+    glm::vec2 colliderSize = SPRITE_SIZE * COLLIDER_SCALE;
+
+
+    m_playerCollider = new BoxCollider(
+        m_playerPosition + getColliderOffset(),  // 初始位置加上偏移
+        COLLIDER_SIZE                           // 使用固定的碰撞箱大小
+    );
+    //m_playerCollider = new BoxCollider(m_playerPosition + (SPRITE_SIZE - colliderSize) * 0.5f, colliderSize);
+    if (m_playerCollider) {
+        m_playerCollider->setCollisionLayer(static_cast<uint32_t>(CollisionLayerBits::Player)); // 0x0001
+        m_playerCollider->setCollisionMask(
+            static_cast<uint32_t>(CollisionLayerBits::Door) |    // 0x0004
+            static_cast<uint32_t>(CollisionLayerBits::Trigger)   // 0x0002
+        );
+        DEBUG_LOG("Player collider initialized - Size: (" << colliderSize.x << ", " << colliderSize.y << ")");
     }
 
-    TextureData* spriteSheet = ResourceManager::getInstance().getTexture("test");
-    if (spriteSheet) {
-        m_characterSprites = std::make_unique<SpriteSheet>(spriteSheet, 32, 32);
-        m_animationController = std::make_unique<AnimationController>();
+    auto& resourceManager = ResourceManager::getInstance();
+    resourceManager.createResourceDirectories();
 
-        // Create idle animation
-        auto idleAnim = std::make_unique<Animation>("idle");
-        idleAnim->addFrame(0, 0.2f);
-        idleAnim->addFrame(1, 0.2f);
-        idleAnim->addFrame(2, 0.2f);
-        idleAnim->addFrame(1, 0.2f);
+    const std::vector<std::pair<std::string, std::string>> texturesToLoad = {
+        {"portal", "E:/zuoye/GameProject/GameProject/x64/Debug/resources/textures/portal/portal.png"},
+        {"test_area_1_bg", "E:/zuoye/GameProject/GameProject/x64/Debug/resources/textures/backgrounds/test_area_1_bg.png"},
+        {"test_area_2_bg", "E:/zuoye/GameProject/GameProject/x64/Debug/resources/textures/backgrounds/test_area_2_bg.png"},
+        {"characterwalk","E:/tmp/texture/Walking_KG_1.png"},
+        {"characteridle","E:/tmp/texture/Idle_KG_1.png"}
+    };
 
-        // Create walk animation
+    for (const auto& [name, path] : texturesToLoad) {
+        if (!std::filesystem::exists(path)) {
+            DEBUG_LOG_WARN("Texture file not found: " << path);
+            continue;
+        }
+        if (!resourceManager.loadTexture(name, path)) {
+            DEBUG_LOG_ERROR("Failed to load texture: " << name);
+        }
+    }
+
+    m_animationController = std::make_unique<AnimationController>();
+    m_isWalking = false;
+    m_currentState = CharacterState::Idle;
+
+    TextureData* walkTexture = resourceManager.getTexture("characterwalk");
+    if (walkTexture) {
+        m_characterSprites.walkSheet = std::make_unique<SpriteSheet>(walkTexture, 100, 64);
+
         auto walkAnim = std::make_unique<Animation>("walk");
-        walkAnim->addFrame(3, 0.1f);
-        walkAnim->addFrame(4, 0.1f);
-        walkAnim->addFrame(5, 0.1f);
-        walkAnim->addFrame(4, 0.1f);
-
-        m_animationController->addAnimation("idle", std::move(idleAnim));
+        for (int i = 0; i < 7; ++i) {
+            walkAnim->addFrame(i, 0.1f);
+        }
+        walkAnim->setLooping(true);
         m_animationController->addAnimation("walk", std::move(walkAnim));
+    }
+
+    // 加载站立动画
+    TextureData* idleTexture = resourceManager.getTexture("characteridle");
+    if (idleTexture) {
+        m_characterSprites.idleSheet = std::make_unique<SpriteSheet>(idleTexture, 100, 64);
+
+        auto idleAnim = std::make_unique<Animation>("idle");
+        for (int i = 0; i < 4; ++i) {
+            idleAnim->addFrame(i, 0.3f);
+        }
+        idleAnim->setLooping(true);
+        m_animationController->addAnimation("idle", std::move(idleAnim));
+    }
+
+    // 设置初始动画
+    if (m_animationController) {
         m_animationController->playAnimation("idle");
     }
 
     Renderer::getInstance().initialize(width, height);
 
+    auto* camera = Renderer::getInstance().getCamera();
+    camera->setFollowSpeed(4.0f);
+    camera->setZoom(1.0f);
+
+    // load and switch to test aera
+    auto& mapManager = MapManager::getInstance();
+    if (!mapManager.loadArea("test_area_1", ResourceManager::getMapPath("test_area_1"))) {
+        std::cerr << "Failed to load test_area_1" << std::endl;
+        return false;
+    }
+    if (!mapManager.loadArea("test_area_2", ResourceManager::getMapPath("test_area_2"))) {
+        std::cerr << "Failed to load test_area_2" << std::endl;
+        return false;
+    }
+
+    mapManager.changeArea("test_area_1", glm::vec2(100.0f, 300.0f));
+
+    glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
 
     return true;
 }
 
 void Engine::handleMovement(float deltaTime) {
     glm::vec2 moveDirection(0.0f);
+    bool directionChanged = false;
 
-    // Check each direction
     if (InputManager::getInstance().isKeyPressed(GLFW_KEY_UP))
         moveDirection.y -= 1.0f;
     if (InputManager::getInstance().isKeyPressed(GLFW_KEY_DOWN))
         moveDirection.y += 1.0f;
-    if (InputManager::getInstance().isKeyPressed(GLFW_KEY_LEFT))
+    if (InputManager::getInstance().isKeyPressed(GLFW_KEY_LEFT)) {
         moveDirection.x -= 1.0f;
-    if (InputManager::getInstance().isKeyPressed(GLFW_KEY_RIGHT))
+        bool wasFlipped = m_spriteFlipX;
+        m_spriteFlipX = true;
+        directionChanged = (wasFlipped != m_spriteFlipX);
+    }
+    if (InputManager::getInstance().isKeyPressed(GLFW_KEY_RIGHT)) {
         moveDirection.x += 1.0f;
+        bool wasFlipped = m_spriteFlipX;
+        m_spriteFlipX = false;
+        directionChanged = (wasFlipped != m_spriteFlipX);
+    }
 
-    // Normalize diagonal movement
-    if (glm::length(moveDirection) > 0.0f) {
-        moveDirection = glm::normalize(moveDirection);
-        m_playerPosition += moveDirection * m_moveSpeed * deltaTime;
+    if (glm::length(moveDirection) > 0.0f || directionChanged) {
+        if (glm::length(moveDirection) > 0.0f) {
+            moveDirection = glm::normalize(moveDirection);
+            glm::vec2 nextPosition = m_playerPosition + moveDirection * m_moveSpeed * deltaTime;
+            glm::vec2 nextColliderPos = nextPosition + getColliderOffset();
+
+            // 保存原始位置
+            glm::vec2 originalPosition = m_playerPosition;
+            glm::vec2 originalColliderPos = m_playerCollider->getPosition();
+
+            // 尝试移动
+            m_playerCollider->setPosition(nextColliderPos);
+
+            bool canMove = true;
+            if (auto* currentArea = MapManager::getInstance().getCurrentArea()) {
+                for (const auto& [id, mechanism] : currentArea->getMechanisms()) {
+                    if (auto* mechCollider = mechanism->getCollider()) {
+                        if (m_playerCollider->isColliding(mechCollider)) {
+                            canMove = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (canMove) {
+                m_playerPosition = nextPosition;
+            }
+            else {
+                m_playerPosition = originalPosition;
+                m_playerCollider->setPosition(originalColliderPos);
+            }
+        }
+
+        // 无论是否移动成功，都要更新碰撞箱位置
+        glm::vec2 finalColliderPos = m_playerPosition + getColliderOffset();
+        m_playerCollider->setPosition(finalColliderPos);
     }
 }
 
@@ -119,50 +228,98 @@ void Engine::update(float deltaTime) {
     // Handle movement
     handleMovement(deltaTime);
 
-    m_frameTime += deltaTime;
-    if (m_frameTime >= m_frameDuration) {
-        m_frameTime -= m_frameDuration;
-        m_currentFrame = (m_currentFrame + 1) % m_characterSprites->getFrameCount();
-    }
-
     // Update animation
     if (m_animationController) {
-        m_animationController->update(deltaTime);
-
-        // Switch between idle and walk animations based on movement
         glm::vec2 moveDirection(0.0f);
         if (InputManager::getInstance().isKeyPressed(GLFW_KEY_UP)) moveDirection.y -= 1.0f;
         if (InputManager::getInstance().isKeyPressed(GLFW_KEY_DOWN)) moveDirection.y += 1.0f;
         if (InputManager::getInstance().isKeyPressed(GLFW_KEY_LEFT)) moveDirection.x -= 1.0f;
         if (InputManager::getInstance().isKeyPressed(GLFW_KEY_RIGHT)) moveDirection.x += 1.0f;
 
-        if (glm::length(moveDirection) > 0.0f) {
-            m_animationController->playAnimation("walk");
+        bool isMoving = glm::length(moveDirection) > 0.0f;
+        if (isMoving != m_isWalking) {
+            m_isWalking = isMoving;
+            m_animationController->playAnimation(m_isWalking ? "walk" : "idle");
         }
-        else {
-            m_animationController->playAnimation("idle");
-        }
-    }
-    m_playerCollider->setPosition(m_playerPosition);
 
+        m_animationController->update(deltaTime);
+    }
+
+    // Update area mechanisms
     if (auto* currentArea = MapManager::getInstance().getCurrentArea()) {
         currentArea->updateMechanisms(deltaTime);
     }
-    handleCollisions();
-}
 
+    // Update camera
+    glm::vec2 targetPos = m_playerPosition + m_cameraOffset;
+    Renderer::getInstance().getCamera()->setTarget(targetPos);
+    Renderer::getInstance().getCamera()->updateFollow(deltaTime);
+
+    Renderer::getInstance().updateCamera(deltaTime);
+    // Handle collisions
+    handleCollisions();
+
+    // Handle portal transitions
+    auto& mapManager = MapManager::getInstance();
+    if (mapManager.handlePortalTransition(m_playerCollider)) {
+        std::cout << "Portal transition triggered" << std::endl;
+    }
+}
 
 void Engine::render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (m_characterSprites && m_animationController) {
+    MapManager::getInstance().render();
+
+    if (m_animationController) {
         RenderProperties props;
         props.position = m_playerPosition;
-        props.size = glm::vec2(64.0f, 64.0f);
-        props.region = m_animationController->getCurrentRegion(*m_characterSprites);
+        // Width compensation
+        if (m_spriteFlipX) {
+            props.position.x += SPRITE_SIZE.x;
+        }
+        props.size = SPRITE_SIZE;
+        props.flipX = m_spriteFlipX;
 
-        Renderer::getInstance().drawTexturedQuad(m_characterSprites->getTexture(), props);
+        SpriteSheet* currentSheet = m_isWalking ?
+            m_characterSprites.walkSheet.get() :
+            m_characterSprites.idleSheet.get();
+
+        if (currentSheet) {
+            props.region = m_animationController->getCurrentRegion(*currentSheet);
+            Renderer::getInstance().drawTexturedQuad(currentSheet->getTexture(), props);
+        }
+    }
+
+    if (m_playerCollider) {
+        Renderer::getInstance().drawRect(
+            m_playerCollider->getPosition(),
+            m_playerCollider->getSize(),
+            glm::vec3(0.0f, 1.0f, 0.0f),
+            0.3f
+        );
+    }
+
+    if (auto* currentArea = MapManager::getInstance().getCurrentArea()) {
+        for (const auto& [id, mechanism] : currentArea->getMechanisms()) {
+            if (auto* collider = mechanism->getCollider()) {
+                glm::vec3 color;
+                if (id.find("door") != std::string::npos) {
+                    color = glm::vec3(1.0f, 0.0f, 0.0f);  // door
+                }
+                else if (id.find("trigger") != std::string::npos) {
+                    color = glm::vec3(1.0f, 1.0f, 0.0f);  // trigger
+                }
+
+                Renderer::getInstance().drawRect(
+                    collider->getPosition(),
+                    collider->getSize(),
+                    color,
+                    0.3f  // transparency
+                );
+            }
+        }
     }
 
     glfwSwapBuffers(m_window);
@@ -198,17 +355,66 @@ void Engine::shutdown() {
 }
 
 void Engine::handleCollisions() {
-    if (!m_playerCollider) return;
+    if (!m_playerCollider) {
+        DEBUG_LOG_ERROR("Player collider is null!");
+        return;
+    }
+
+    const glm::vec2 SPRITE_SIZE(100.0f, 64.0f);
+    const float COLLIDER_SCALE = 0.7f;
+    glm::vec2 colliderSize = SPRITE_SIZE * COLLIDER_SCALE;
+    glm::vec2 colliderOffset = (SPRITE_SIZE - colliderSize) * 0.5f;
+
+    if (auto* currentArea = MapManager::getInstance().getCurrentArea()) {
+        for (const auto& [id, mechanism] : currentArea->getMechanisms()) {
+            if (auto* mechCollider = mechanism->getCollider()) {
+                CollisionManifold manifold = m_playerCollider->checkCollision(mechCollider);
+                if (manifold.hasCollision) {
+                    //DEBUG_LOG("Collision detected with mechanism: " << id);
+                    m_playerPosition += manifold.normal * manifold.penetration;
+                    m_playerCollider->setPosition(m_playerPosition + colliderOffset);
+                }
+            }
+        }
+    }
 
     for (const auto* collider : m_colliders) {
         if (collider == m_playerCollider) continue;
 
         CollisionManifold manifold = m_playerCollider->checkCollision(collider);
         if (manifold.hasCollision) {
-            // handle collision response
             m_playerPosition += manifold.normal * manifold.penetration;
-            // update position of player collision body
-            m_playerCollider->setPosition(m_playerPosition);
+            m_playerCollider->setPosition(m_playerPosition + colliderOffset);
         }
     }
 }
+
+BoxCollider* Engine::getPlayerCollider() {
+    if (m_playerCollider) {
+        // 用于调试的输出
+        std::cout << "Getting player collider at: ("
+            << m_playerPosition.x << ","
+            << m_playerPosition.y << ")" << std::endl;
+    }
+    else {
+        std::cout << "Warning: Player collider is null!" << std::endl;
+    }
+    return m_playerCollider;
+}
+
+glm::vec2 Engine::getColliderOffset() const {
+    return glm::vec2(
+        (SPRITE_SIZE.x - COLLIDER_SIZE.x) * 0.5f,  // 水平居中
+        (SPRITE_SIZE.y - COLLIDER_SIZE.y) * 0.8f   // 底部稍微上移，让碰撞箱更贴近角色
+    );
+}
+
+glm::vec2 Engine::getSpriteRenderPosition() const {
+    return m_playerPosition;
+}
+
+void Engine::initializeCameraOffset() {
+    const auto& screenSize = Renderer::getInstance().getScreenSize();
+    m_cameraOffset = glm::vec2(screenSize.x * 0.5f, screenSize.y * 0.5f);
+}
+

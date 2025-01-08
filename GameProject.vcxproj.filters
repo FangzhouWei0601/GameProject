@@ -20,6 +20,16 @@
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\engine\resource\ConfigValidator.cpp" />
+    <ClCompile Include="src\engine\map\BackgroundLayer.cpp" />
+    <ClCompile Include="src\engine\map\LayerRenderer.cpp" />
+    <ClCompile Include="src\engine\map\ObjectLayer.cpp" />
+    <ClCompile Include="src\engine\map\portal\PortalSystem.cpp" />
+    <ClCompile Include="src\engine\map\AreaTransitionEffect.cpp" />
+    <ClCompile Include="src\engine\map\portal\PortalEffect.cpp" />
+    <ClCompile Include="src\engine\map\portal\PortalRenderer.cpp" />
+    <ClCompile Include="src\engine\map\LoadingScreen.cpp" />
+    <ClCompile Include="src\engine\map\mechanism\DoorMechanism.cpp" />
+    <ClCompile Include="src\engine\camera\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\headers\character\AttributeSystem.h" />
@@ -51,5 +61,17 @@
     <ClInclude Include="include\headers\skill\CooldownTypes.h" />
     <ClInclude Include="include\headers\Engine.h" />
     <ClInclude Include="include\headers\resource\ConfigValidator.h" />
+    <ClInclude Include="include\headers\map\ILayer.h" />
+    <ClInclude Include="include\headers\map\BackgroundLayer.h" />
+    <ClInclude Include="include\headers\map\LayerRenderer.h" />
+    <ClInclude Include="include\headers\map\ObjectLayer.h" />
+    <ClInclude Include="include\headers\map\portal\PortalSystem.h" />
+    <ClInclude Include="include\headers\map\AreaTransitionEffect.h" />
+    <ClInclude Include="include\headers\map\portal\PortalEffect.h" />
+    <ClInclude Include="include\headers\map\portal\PortalRenderer.h" />
+    <ClInclude Include="include\headers\map\LoadingScreen.h" />
+    <ClInclude Include="include\headers\map\mechanism\DoorMechanism.h" />
+    <ClInclude Include="include\headers\CommonDefines.h" />
+    <ClInclude Include="include\headers\camera\Camera.h" />
   </ItemGroup>
 </Project>

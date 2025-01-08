@@ -2,20 +2,21 @@
 #include <iostream>
 #include "../../../include/headers/renderer/Renderer.h"
 #include "../../../include/headers/resource/TextureData.h"
+#include "../../../include/headers/input/InputManager.h"
 
-// Add textured vertex shader
 const char* texturedVertexShaderSource = R"(
     #version 330 core
     layout (location = 0) in vec2 aPos;
     layout (location = 1) in vec2 aTexCoord;
     
-    uniform mat4 projection;
     uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
     
     out vec2 TexCoord;
     
     void main() {
-        gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
+        gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0);
         TexCoord = aTexCoord;
     }
 )";
@@ -38,10 +39,13 @@ const char* texturedFragmentShaderSource = R"(
 const char* vertexShaderSource = R"(
     #version 330 core
     layout (location = 0) in vec2 aPos;
-    uniform mat4 projection;
+    
     uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
+    
     void main() {
-        gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
+        gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0);
     }
 )";
 
@@ -49,9 +53,10 @@ const char* vertexShaderSource = R"(
 const char* fragmentShaderSource = R"(
     #version 330 core
     uniform vec3 color;
+    uniform float alpha;
     out vec4 FragColor;
     void main() {
-        FragColor = vec4(color, 1.0);
+        FragColor = vec4(color, alpha);
     }
 )";
 
@@ -66,6 +71,11 @@ void Renderer::initialize(int screenWidth, int screenHeight) {
 
     m_projection = glm::ortho(0.0f, static_cast<float>(screenWidth),
         static_cast<float>(screenHeight), 0.0f, -1.0f, 1.0f);
+
+    m_screenSize = glm::vec2(static_cast<float>(screenWidth),
+        static_cast<float>(screenHeight));
+
+    m_camera = std::make_unique<Camera>(screenWidth, screenHeight);
 }
 
 void Renderer::initTextureShaders() {
@@ -167,11 +177,13 @@ void Renderer::drawTexturedQuad(const TextureData* texture, const RenderProperti
 
     // Set uniforms
     GLint modelLoc = glGetUniformLocation(m_textureShaderProgram, "model");
+    GLint viewLoc = glGetUniformLocation(m_textureShaderProgram, "view");
     GLint projectionLoc = glGetUniformLocation(m_textureShaderProgram, "projection");
     GLint colorLoc = glGetUniformLocation(m_textureShaderProgram, "color");
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(m_projection));
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getProjectionMatrix()));
     glUniform4fv(colorLoc, 1, glm::value_ptr(props.color));
 
     // Bind texture
@@ -192,44 +204,44 @@ void Renderer::shutdown() {
 }
 
 void Renderer::initShaders() {
-    // Vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
-    // Fragment shader
+    // 检查着色器编译错误
+    GLint success;
+    GLchar infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "Vertex shader compilation failed:\n" << infoLog << std::endl;
+    }
+
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // Shader program
+    // 检查片段着色器编译错误
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "Fragment shader compilation failed:\n" << infoLog << std::endl;
+    }
+
+    // 链接着色器程序
     m_shaderProgram = glCreateProgram();
     glAttachShader(m_shaderProgram, vertexShader);
     glAttachShader(m_shaderProgram, fragmentShader);
     glLinkProgram(m_shaderProgram);
 
-    // Check for shader compilation and linking errors
-    int success;
-    char infoLog[512];
-
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cerr << "Basic vertex shader compilation failed: " << infoLog << std::endl;
-    }
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cerr << "Basic fragment shader compilation failed: " << infoLog << std::endl;
-    }
-
+    // 检查链接错误
     glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(m_shaderProgram, 512, NULL, infoLog);
-        std::cerr << "Basic shader program linking failed: " << infoLog << std::endl;
+        std::cout << "Shader program linking failed:\n" << infoLog << std::endl;
     }
 
+    // 清理
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 }
@@ -258,4 +270,44 @@ glm::mat4 Renderer::calculateTransform(const RenderProperties& props) {
     model = glm::scale(model, glm::vec3(scale, 1.0f));
 
     return model;
+}
+
+void Renderer::drawRect(const glm::vec2& position, const glm::vec2& size, const glm::vec3& color, float alpha) {
+    glUseProgram(m_shaderProgram);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(position, 0.0f));
+    model = glm::scale(model, glm::vec3(size, 1.0f));
+
+    GLint modelLoc = glGetUniformLocation(m_shaderProgram, "model");
+    GLint viewLoc = glGetUniformLocation(m_shaderProgram, "view");
+    GLint projectionLoc = glGetUniformLocation(m_shaderProgram, "projection");
+    GLint colorLoc = glGetUniformLocation(m_shaderProgram, "color");
+    GLint alphaLoc = glGetUniformLocation(m_shaderProgram, "alpha");
+
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getProjectionMatrix()));
+    glUniform3fv(colorLoc, 1, glm::value_ptr(color));
+    glUniform1f(alphaLoc, alpha);
+
+    glBindVertexArray(m_VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void Renderer::updateCamera(float deltaTime) {
+    if (InputManager::getInstance().isKeyPressed(GLFW_KEY_MINUS)) {
+        m_camera->setZoom(m_camera->getZoom() - deltaTime);
+    }
+    if (InputManager::getInstance().isKeyPressed(GLFW_KEY_EQUAL)) {
+        m_camera->setZoom(m_camera->getZoom() + deltaTime);
+    }
+}
+
+void Renderer::onWindowResize(int width, int height) {
+    m_screenSize = glm::vec2(width, height);
+    glViewport(0, 0, width, height);
+    if (m_camera) {
+        m_camera.reset(new Camera(width, height));
+    }
 }

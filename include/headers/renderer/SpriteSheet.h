@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "../resource/TextureData.h"
+#include <memory>
 
 class SpriteSheet {
 public:
@@ -20,6 +21,10 @@ public:
         return TextureRegion();
     }
 
+    std::unique_ptr<SpriteSheet> clone() const {
+        return std::make_unique<SpriteSheet>(m_texture, m_frameWidth, m_frameHeight);
+    }
+
     TextureData* getTexture() const { return m_texture; }
     int getFrameCount() const { return m_regions.size(); }
 
@@ -27,16 +32,12 @@ private:
     void generateRegions() {
         for (int y = 0; y < m_rows; ++y) {
             for (int x = 0; x < m_columns; ++x) {
-                m_regions.push_back(
-                    TextureRegion::fromPixels(
-                        x * m_frameWidth,
-                        y * m_frameHeight,
-                        m_frameWidth,
-                        m_frameHeight,
-                        m_texture->width,
-                        m_texture->height
-                    )
-                );
+                float u1 = static_cast<float>(x * m_frameWidth) / m_texture->width;
+                float v1 = static_cast<float>(y * m_frameHeight) / m_texture->height;
+                float u2 = static_cast<float>((x + 1) * m_frameWidth) / m_texture->width;
+                float v2 = static_cast<float>((y + 1) * m_frameHeight) / m_texture->height;
+
+                m_regions.push_back(TextureRegion(u1, v1, u2, v2));
             }
         }
     }

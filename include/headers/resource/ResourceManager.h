@@ -6,6 +6,9 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <irrklang/irrKlang.h>
+#include <filesystem>
+#include <vector>
+#include <iostream>
 
 class ResourceManager {
 public:
@@ -14,14 +17,22 @@ public:
         return instance;
     }
 
-    static std::string getMapPath(const std::string& mapId) {
-        return "resources/maps/areas/" + mapId + ".json";
-    }
+    struct ResourceError {
+        std::string message;
+        std::string resourceName;
+        std::string resourcePath;
+    };
+
+    const std::vector<ResourceError>& getErrors() const { return m_errors; }
+    void clearErrors() { m_errors.clear(); }
 
     // Texture management
     bool loadTexture(const std::string& name, const std::string& path);
     void unloadTexture(const std::string& name);
     TextureData* getTexture(const std::string& name);
+
+    bool preloadResources(const std::string& configPath);
+    void createResourceDirectories();
 
     // Resource management
     void initialize();
@@ -66,6 +77,12 @@ private:
     ResourceManager(const ResourceManager&) = delete;
     ResourceManager& operator=(const ResourceManager&) = delete;
 
+    struct PreloadConfig {
+        std::vector<std::string> textures;
+        std::vector<std::string> sounds;
+        std::vector<std::string> maps;
+    };
+
     std::unordered_map<std::string, std::unique_ptr<TextureData>> m_textures;
 
     std::unordered_map<std::string, irrklang::ISoundSource*> m_sounds;
@@ -76,5 +93,12 @@ private:
     void freeTextureData(unsigned char* data);
     bool loadJsonFile(const std::string& path, nlohmann::json& outJson);
 
+    bool loadPreloadConfig(const std::string& configPath, PreloadConfig& config);
+
     GLenum getGLFormat(int channels);
+
+    std::vector<ResourceError> m_errors;
+    void logError(const std::string& message,
+        const std::string& resourceName = "",
+        const std::string& resourcePath = "");
 };

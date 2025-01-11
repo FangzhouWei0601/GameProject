@@ -1,5 +1,6 @@
 #include "../../../../include/headers/map/mechanism/DoorMechanism.h"
 #include "../../../../include/headers/CommonDefines.h"
+#include "../../../../include/headers/audio/AudioManager.h"
 
 DoorMechanism::DoorMechanism(const std::string& id, const glm::vec2& position, const glm::vec2& size)
     : IMechanism(id, MechanismType::Door)
@@ -22,15 +23,16 @@ DoorMechanism::DoorMechanism(const std::string& id, const glm::vec2& position, c
 }
 
 void DoorMechanism::activate() {
-    DEBUG_LOG("尝试激活门 " << getId());
+    //DEBUG_LOG("尝试激活门 " << getId());
     if (m_doorState == DoorState::Locked) {
         return;
     }
 
     if (m_doorState == DoorState::Closed || m_doorState == DoorState::Closing) {
+        AudioManager::getInstance().playSFX("door");
         m_doorState = DoorState::Opening;
         m_state = MechanismState::Active;
-        DEBUG_LOG("门已开始打开");
+        //DEBUG_LOG("门已开始打开");
     }
 }
 

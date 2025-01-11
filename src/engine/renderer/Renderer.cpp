@@ -5,7 +5,7 @@
 #include "../../../include/headers/input/InputManager.h"
 
 const char* texturedVertexShaderSource = R"(
-    #version 330 core
+    #version 430 core
     layout (location = 0) in vec2 aPos;
     layout (location = 1) in vec2 aTexCoord;
     
@@ -23,7 +23,7 @@ const char* texturedVertexShaderSource = R"(
 
 // Add textured fragment shader
 const char* texturedFragmentShaderSource = R"(
-    #version 330 core
+    #version 430 core
     in vec2 TexCoord;
     
     uniform sampler2D textureImage;
@@ -37,7 +37,7 @@ const char* texturedFragmentShaderSource = R"(
 )";
 
 const char* vertexShaderSource = R"(
-    #version 330 core
+    #version 430 core
     layout (location = 0) in vec2 aPos;
     
     uniform mat4 model;
@@ -51,7 +51,7 @@ const char* vertexShaderSource = R"(
 
 // Basic fragment shader for non-textured rendering
 const char* fragmentShaderSource = R"(
-    #version 330 core
+    #version 430 core
     uniform vec3 color;
     uniform float alpha;
     out vec4 FragColor;

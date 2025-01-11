@@ -3,6 +3,7 @@
 #include <iostream>
 #include "../../../../include/headers/Engine.h"
 #include "../../../../include/headers/CommonDefines.h"
+#include "../../../../include/headers/audio/AudioManager.h"
 
 TriggerMechanism::TriggerMechanism(const std::string& id,
     const TriggerCondition& condition,
@@ -27,7 +28,9 @@ TriggerMechanism::TriggerMechanism(const std::string& id,
 }
 
 void TriggerMechanism::activate() {
+    DEBUG_LOG("触发器 " << getId() << " 被激活");
     if (m_state != MechanismState::Active) {
+        AudioManager::getInstance().playSFX("trigger");
         m_state = MechanismState::Active;
         applyEffect();
     }
@@ -129,6 +132,7 @@ void TriggerMechanism::applyEffect() {
         break;
     }
     }
+    DEBUG_LOG("触发器应用效果，目标门: " << m_effect.targetId);
 }
 
 void TriggerMechanism::removeEffect() {
@@ -214,36 +218,25 @@ void TriggerMechanism::render() {
 }
 
 bool TriggerMechanism::isPlayerInRange(const BoxCollider* playerCollider) const {
+    //DEBUG_LOG("执行触发器范围检测 - ID: " << getId());
     auto* triggerCollider = getCollider();
-    if (!playerCollider || !triggerCollider) {
-        DEBUG_LOG("触发器碰撞体无效");
-        return false;
+    if (!playerCollider || !triggerCollider) return false;
+
+    // 获取玩家中心点位置
+    glm::vec2 playerCenter = playerCollider->getPosition() + playerCollider->getSize() * 0.5f;
+    // 获取触发器中心点位置
+    glm::vec2 triggerCenter = triggerCollider->getPosition() + triggerCollider->getSize() * 0.5f;
+
+    float distance = glm::length(playerCenter - triggerCenter);
+
+    //DEBUG_LOG("触发器检测 - 距离: " << distance << ", 所需半径: " << m_condition.triggerRadius);
+
+    // 判断是否在范围内
+    if (distance <= m_condition.triggerRadius) {
+        //DEBUG_LOG("触发器 " << getId() << " 检测到玩家，目标门: " << m_effect.targetId);
+        return true;
     }
-
-    DEBUG_LOG("触发器碰撞检查:");
-    DEBUG_LOG("- 触发器ID: " << getId());
-    DEBUG_LOG("- 触发器层: 0x" << std::hex << triggerCollider->getCollisionLayer().layer);
-    DEBUG_LOG("- 触发器掩码: 0x" << std::hex << triggerCollider->getCollisionLayer().mask);
-    DEBUG_LOG("- 玩家层: 0x" << std::hex << playerCollider->getCollisionLayer().layer);
-    DEBUG_LOG("- 玩家掩码: 0x" << std::hex << playerCollider->getCollisionLayer().mask);
-
-    // 确认碰撞层设置正确
-    if (!(triggerCollider->getCollisionLayer().mask & playerCollider->getCollisionLayer().layer)) {
-        DEBUG_LOG("Collision layer mismatch - Trigger layer: " <<
-            std::hex << triggerCollider->getCollisionLayer().layer <<
-            ", Player layer: " << playerCollider->getCollisionLayer().layer);
-        return false;
-    }
-
-    DEBUG_LOG("检查触发器 " << getId() << " 与玩家的碰撞");
-    DEBUG_LOG("触发器目标: " << m_effect.targetId);
-
-    DEBUG_LOG("检查玩家和触发器碰撞");
-    bool collision = triggerCollider->isColliding(playerCollider);
-    if (collision) {
-        DEBUG_LOG("触发器 " << getId() << " 被触发，目标门: " << m_effect.targetId);
-    }
-    return collision;
+    return false;
 }
 
 void TriggerMechanism::initializeCollider(const glm::vec2& position, const glm::vec2& size) {

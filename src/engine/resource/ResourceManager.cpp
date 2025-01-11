@@ -2,6 +2,7 @@
 #include <stb/stb_image.h>
 #include <iostream>
 #include "../../../include/headers/resource/ResourceManager.h"
+#include "../../../include/headers/audio/AudioManager.h"
 
 namespace {
     bool createDirectoryIfNotExists(const std::string& path) {
@@ -29,6 +30,8 @@ void ResourceManager::initialize() {
     if (!m_soundEngine) {
         std::cerr << "Failed to create sound engine!" << std::endl;
     }
+
+    AudioManager::getInstance().initialize();
 }
 
 bool ResourceManager::loadTexture(const std::string& name, const std::string& path) {
@@ -143,6 +146,8 @@ void ResourceManager::shutdown() {
         m_soundEngine->drop();
         m_soundEngine = nullptr;
     }
+
+    AudioManager::getInstance().shutdown();
 }
 
 // Image loading utilities
@@ -288,10 +293,18 @@ bool ResourceManager::preloadResources(const std::string& configPath) {
     }
 
     // ‘§º”‘ÿ“Ù∆µ
-    for (const auto& soundPath : config.sounds) {
-        std::string name = std::filesystem::path(soundPath).stem().string();
-        if (!loadSound(name, soundPath)) {
-            success = false;
+    const std::vector<std::pair<std::string, std::string>> soundsToLoad = {
+        {"button", "resources/audio/sfx/button.wav"},
+        {"trigger", "resources/audio/sfx/trigger.wav"},
+        {"door", "resources/audio/sfx/door.wav"},
+        {"portal", "resources/audio/sfx/portal.wav"}
+    };
+
+    for (const auto& [name, path] : soundsToLoad) {
+        if (std::filesystem::exists(path)) {
+            if (!loadSound(name, path)) {
+                success = false;
+            }
         }
     }
 
@@ -330,3 +343,5 @@ bool ResourceManager::loadPreloadConfig(const std::string& configPath, PreloadCo
         return false;
     }
 }
+
+

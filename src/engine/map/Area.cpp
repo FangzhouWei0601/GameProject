@@ -128,6 +128,24 @@ void Area::updateMechanisms(float deltaTime) {
 bool Area::loadResources() {
     if (!loadBackgroundTexture()) return false;
     if (!loadMechanismConfigs()) return false;
+
+    // º”‘ÿ“Ù∆µ◊ ‘¥
+    const std::vector<std::pair<std::string, std::string>> soundsToLoad = {
+        {m_data.id + "_bgm", "resources/audio/bgm/" + m_data.id + ".wav"},
+        {m_data.id + "_ambient", "resources/audio/ambient/" + m_data.id + ".wav"}
+    };
+
+    auto& resourceManager = ResourceManager::getInstance();
+    for (const auto& [name, path] : soundsToLoad) {
+        if (std::filesystem::exists(path)) {
+            if (!resourceManager.loadSound(name, path)) {
+                DEBUG_LOG_ERROR("Failed to load sound: " << name);
+                return false;
+            }
+            DEBUG_LOG("Loaded sound: " << name);
+        }
+    }
+
     return true;
 }
 

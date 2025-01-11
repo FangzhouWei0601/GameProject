@@ -30,6 +30,7 @@
     <ClCompile Include="src\engine\map\LoadingScreen.cpp" />
     <ClCompile Include="src\engine\map\mechanism\DoorMechanism.cpp" />
     <ClCompile Include="src\engine\camera\Camera.cpp" />
+    <ClCompile Include="src\engine\audio\AudioManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\headers\character\AttributeSystem.h" />
@@ -73,5 +74,6 @@
     <ClInclude Include="include\headers\map\mechanism\DoorMechanism.h" />
     <ClInclude Include="include\headers\CommonDefines.h" />
     <ClInclude Include="include\headers\camera\Camera.h" />
+    <ClInclude Include="include\headers\audio\AudioManager.h" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,6 @@
 #include "../../../include/headers/collision/BoxCollider.h"
 #include "../../../include/headers/CommonDefines.h"
 
-
 BoxCollider::BoxCollider(const glm::vec2& pos, const glm::vec2& size) {
     if (!isValidPosition(pos)) {
         DEBUG_LOG_WARN("Invalid position in BoxCollider. Using default position.");
@@ -70,12 +69,9 @@ bool BoxCollider::isColliding(const ICollider* other) const {
     }
 
     auto otherLayer = other->getCollisionLayer();
-    DEBUG_LOG("Åö×²¼ì²éÑÚÂë:");
-    DEBUG_LOG("- µ±Ç°²ã: 0x" << std::hex << m_layer.layer << " ÑÚÂë: 0x" << m_layer.mask);
-    DEBUG_LOG("- ¶Ô·½²ã: 0x" << std::hex << otherLayer.layer << " ÑÚÂë: 0x" << otherLayer.mask);
 
+    // Layer mask check
     if (!(m_layer.mask & otherLayer.layer)) {
-        DEBUG_LOG("ÑÚÂë¼ì²éÊ§°Ü");
         return false;
     }
 
@@ -84,11 +80,7 @@ bool BoxCollider::isColliding(const ICollider* other) const {
         return false;
     }
 
-    bool result = checkOverlap(boxOther);
-    if (result) {
-        DEBUG_LOG("Åö×²³É¹¦: " << m_layer.layer);
-    }
-    return result;
+    return checkOverlap(boxOther);
 }
 
 CollisionManifold BoxCollider::checkCollision(const ICollider* other) const {
@@ -118,6 +110,7 @@ CollisionManifold BoxCollider::checkCollision(const ICollider* other) const {
     if (overlap.x > 0 && overlap.y > 0) {
         CollisionManifold manifold(true);
 
+        // Determine collision normal based on minimum penetration
         if (overlap.x < overlap.y) {
             manifold.normal.x = (minA.x + maxA.x < minB.x + maxB.x) ? 1.0f : -1.0f;
             manifold.penetration = overlap.x;

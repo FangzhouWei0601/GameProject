@@ -18,12 +18,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 bool Engine::initialize(const std::string& windowTitle, int width, int height) {
     // Initialize GLFW
     if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
+        DEBUG_LOG_ERROR("Failed to initialize GLFW");
         return false;
     }
 
     // Configure GLFW
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -62,17 +62,17 @@ bool Engine::initialize(const std::string& windowTitle, int width, int height) {
 
 
     m_playerCollider = new BoxCollider(
-        m_playerPosition + getColliderOffset(),  // 初始位置加上偏移
-        COLLIDER_SIZE                           // 使用固定的碰撞箱大小
+        m_playerPosition + getColliderOffset(),  
+        COLLIDER_SIZE                           
     );
-    //m_playerCollider = new BoxCollider(m_playerPosition + (SPRITE_SIZE - colliderSize) * 0.5f, colliderSize);
+
     if (m_playerCollider) {
         m_playerCollider->setCollisionLayer(static_cast<uint32_t>(CollisionLayerBits::Player)); // 0x0001
         m_playerCollider->setCollisionMask(
             static_cast<uint32_t>(CollisionLayerBits::Door) |    // 0x0004
             static_cast<uint32_t>(CollisionLayerBits::Trigger)   // 0x0002
         );
-        DEBUG_LOG("Player collider initialized - Size: (" << colliderSize.x << ", " << colliderSize.y << ")");
+        //DEBUG_LOG("Player collider initialized - Size: (" << colliderSize.x << ", " << colliderSize.y << ")");
     }
 
     auto& resourceManager = ResourceManager::getInstance();
@@ -86,6 +86,12 @@ bool Engine::initialize(const std::string& windowTitle, int width, int height) {
         {"characteridle","E:/tmp/texture/Idle_KG_1.png"}
     };
 
+    const std::vector<std::pair<std::string, std::string>> soundsToLoad = {
+    {"bg", "resources/audio/bgm/background.wav"},
+    {"trigger", "resources/audio/sfx/trigger.wav"},
+    {"door", "resources/audio/sfx/door.wav"}
+    };
+
     for (const auto& [name, path] : texturesToLoad) {
         if (!std::filesystem::exists(path)) {
             DEBUG_LOG_WARN("Texture file not found: " << path);
@@ -93,6 +99,16 @@ bool Engine::initialize(const std::string& windowTitle, int width, int height) {
         }
         if (!resourceManager.loadTexture(name, path)) {
             DEBUG_LOG_ERROR("Failed to load texture: " << name);
+        }
+    }
+
+    for (const auto& [name, path] : soundsToLoad) {
+        if (!std::filesystem::exists(path)) {
+            DEBUG_LOG_WARN("Sound file not found: " << path);
+            continue;
+        }
+        if (!resourceManager.loadSound(name, path)) {
+            DEBUG_LOG_ERROR("Failed to load sound: " << name);
         }
     }
 
@@ -250,6 +266,8 @@ void Engine::update(float deltaTime) {
         currentArea->updateMechanisms(deltaTime);
     }
 
+    MapManager::getInstance().update(deltaTime);
+
     // Update camera
     glm::vec2 targetPos = m_playerPosition + m_cameraOffset;
     Renderer::getInstance().getCamera()->setTarget(targetPos);
@@ -391,10 +409,7 @@ void Engine::handleCollisions() {
 
 BoxCollider* Engine::getPlayerCollider() {
     if (m_playerCollider) {
-        // 用于调试的输出
-        std::cout << "Getting player collider at: ("
-            << m_playerPosition.x << ","
-            << m_playerPosition.y << ")" << std::endl;
+        //DEBUG_LOG("Getting player collider at:(" << m_playerPosition.x << "," << m_playerPosition.y << "(");
     }
     else {
         std::cout << "Warning: Player collider is null!" << std::endl;

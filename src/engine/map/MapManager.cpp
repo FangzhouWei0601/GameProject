@@ -12,6 +12,7 @@
 #include "../../../include/headers/map/mechanism/DoorMechanism.h"
 #include "../../../include/headers/Engine.h"
 #include "../../../include/headers/CommonDefines.h"
+#include "../../../include/headers/audio/AudioManager.h"
 
 using json = nlohmann::json;
 
@@ -345,8 +346,8 @@ void MapManager::loadMechanisms(Area* area, const std::string& areaId) {
 std::unique_ptr<IMechanism> MapManager::createMechanism(MechanismType type, const nlohmann::json& mechData) {
     try {
         std::string id = mechData["id"].get<std::string>();
+        MechanismType mechType = static_cast<MechanismType>(mechData["type"].get<int>());
 
-        // 获取位置和大小
         glm::vec2 position(
             mechData["position"]["x"].get<float>(),
             mechData["position"]["y"].get<float>()
@@ -356,19 +357,21 @@ std::unique_ptr<IMechanism> MapManager::createMechanism(MechanismType type, cons
             mechData["size"]["y"].get<float>()
         );
 
-        std::unique_ptr<IMechanism> mechanism;
+        DEBUG_LOG("创建机关 " << id << " 类型:" << static_cast<int>(mechType));
 
-        if (mechData["id"].get<std::string>().find("door") != std::string::npos) {
+        std::unique_ptr<IMechanism> mechanism;
+        switch (mechType) {
+        case MechanismType::Door: {
             mechanism = std::make_unique<DoorMechanism>(id, position, size);
             if (mechanism) {
                 auto collider = std::make_unique<BoxCollider>(position, size);
-                // 门的碰撞设置
-                collider->setCollisionLayer(static_cast<uint32_t>(CollisionLayerBits::Door));     // 0x4
-                collider->setCollisionMask(static_cast<uint32_t>(CollisionLayerBits::Player));    // 0x1
+                collider->setCollisionLayer(static_cast<uint32_t>(CollisionLayerBits::Door));
+                collider->setCollisionMask(static_cast<uint32_t>(CollisionLayerBits::Player));
                 mechanism->setCollider(std::move(collider));
             }
+            break;
         }
-        else if (mechData["id"].get<std::string>().find("trigger") != std::string::npos) {
+        case MechanismType::Trigger: {
             TriggerCondition condition;
             condition.requiresPlayerPresence = mechData["requiresPlayer"].get<bool>();
             condition.triggerRadius = mechData["radius"].get<float>();
@@ -380,14 +383,14 @@ std::unique_ptr<IMechanism> MapManager::createMechanism(MechanismType type, cons
             effect.duration = mechData["duration"].get<float>();
 
             mechanism = std::make_unique<TriggerMechanism>(id, condition, effect);
-
             if (mechanism) {
                 auto collider = std::make_unique<BoxCollider>(position, size);
-                // 触发器的碰撞设置
-                collider->setCollisionLayer(static_cast<uint32_t>(CollisionLayerBits::Trigger));  // 0x2
-                collider->setCollisionMask(static_cast<uint32_t>(CollisionLayerBits::Player));    // 0x1
+                collider->setCollisionLayer(static_cast<uint32_t>(CollisionLayerBits::Trigger));
+                collider->setCollisionMask(static_cast<uint32_t>(CollisionLayerBits::Player));
                 mechanism->setCollider(std::move(collider));
             }
+            break;
+        }
         }
 
         return mechanism;
@@ -421,6 +424,15 @@ bool MapManager::changeArea(const std::string& areaId, const glm::vec2& position
         (m_currentArea ? m_currentArea->getId() : "None") <<
         " to " << areaId);
 
+    // 停止当前区域的音效
+    if (m_currentArea) {
+        std::string currentBgm = m_currentArea->getId() + "_bgm";
+        std::string currentAmbient = m_currentArea->getId() + "_ambient";
+        auto& audio = AudioManager::getInstance();
+        audio.stopBGM();
+        audio.stopAllAmbient();
+    }
+
     if (auto* area = m_areas[areaId].get()) {
         auto bounds = area->getBounds();
         auto* camera = Renderer::getInstance().getCamera();
@@ -435,11 +447,9 @@ bool MapManager::changeArea(const std::string& areaId, const glm::vec2& position
         }
     }
 
-    // 保存区域的机关状态
     auto area = m_areas[areaId].get();
     DEBUG_LOG("Area mechanisms count before transition: " << area->getMechanisms().size());
 
-    // 重新初始化渲染器但保持机关状态
     if (!area->initializeRenderer()) {
         return false;
     }
@@ -447,6 +457,14 @@ bool MapManager::changeArea(const std::string& areaId, const glm::vec2& position
     DEBUG_LOG("Area mechanisms count after renderer init: " << area->getMechanisms().size());
 
     m_currentArea = area;
+
+    // 播放新区域音效
+    std::string newBgm = areaId + "_bgm";
+    std::string newAmbient = areaId + "_ambient";
+    auto& audio = AudioManager::getInstance();
+    audio.playBGM(newBgm);
+    audio.playAmbient(newAmbient, 0.5f);
+
     return true;
 }
 
@@ -539,25 +557,21 @@ void MapManager::loadColliders(Area* area, const nlohmann::json& json) {
 //}
 
 void MapManager::update(float deltaTime) {
+    if (!m_currentArea) return;
+
     auto* playerCollider = Engine::getInstance().getPlayerCollider();
-    if (!playerCollider) {
-        return;
-    }
+    if (!playerCollider) return;
 
-    if (m_currentArea) {
-        for (auto& [id, mechanism] : m_currentArea->getMechanisms()) {
-            if (auto* trigger = dynamic_cast<TriggerMechanism*>(mechanism.get())) {
-                bool wasInRange = trigger->isActive();
-                bool isInRange = trigger->isPlayerInRange(playerCollider);
+    for (auto& [id, mechanism] : m_currentArea->getMechanisms()) {
+        mechanism->update(deltaTime);
 
-                DEBUG_LOG("触发器状态检查 - 之前状态:" << wasInRange << " 当前状态:" << isInRange);
-
-                if (isInRange && !wasInRange) {
-                    if (auto* targetDoor = dynamic_cast<DoorMechanism*>(
-                        m_currentArea->getMechanism(trigger->getTargetId()))) {
-                        DEBUG_LOG("激活门: " << trigger->getTargetId());
-                        targetDoor->activate();
-                    }
+        if (auto* trigger = dynamic_cast<TriggerMechanism*>(mechanism.get())) {
+            bool isInRange = trigger->isPlayerInRange(playerCollider);
+            if (isInRange) {
+                //DEBUG_LOG("trigger " << id << " was trigged");
+                if (auto* door = dynamic_cast<DoorMechanism*>(
+                    m_currentArea->getMechanism(trigger->getTargetId()))) {
+                    door->activate();
                 }
             }
         }

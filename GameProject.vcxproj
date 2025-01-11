@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="include\header.cpp" />
+    <ClCompile Include="src\engine\audio\AudioManager.cpp" />
     <ClCompile Include="src\engine\camera\Camera.cpp" />
     <ClCompile Include="src\engine\character\AttributeSystem.cpp" />
     <ClCompile Include="src\engine\character\LevelSystem.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\headers\audio\AudioManager.h" />
     <ClInclude Include="include\headers\camera\Camera.h" />
     <ClInclude Include="include\headers\character\AttributeSystem.h" />
     <ClInclude Include="include\headers\character\LevelSystem.h" />

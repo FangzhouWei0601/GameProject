@@ -71,6 +71,11 @@ public:
     bool loadSound(const std::string& name, const std::string& path);
     void unloadSound(const std::string& name);
 
+    irrklang::ISoundSource* getSound(const std::string& name) {
+        auto it = m_sounds.find(name);
+        return it != m_sounds.end() ? it->second : nullptr;
+    }
+
 private:
     ResourceManager() = default;
     ~ResourceManager() { shutdown(); }

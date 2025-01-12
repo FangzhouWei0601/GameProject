@@ -32,10 +32,8 @@ void Camera::update() {
 }
 
 void Camera::updateMatrices() {
-    // 修改正交投影矩阵的参数
     float halfWidth = m_screenSize.x * 0.5f / m_zoom;
     float halfHeight = m_screenSize.y * 0.5f / m_zoom;
-    // 注意这里的上下参数要调换
     m_projectionMatrix = glm::ortho(-halfWidth, halfWidth, halfHeight, -halfHeight);
 
     m_viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-m_position, 0.0f));

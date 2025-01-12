@@ -3,7 +3,7 @@
 #include "../../../include/headers/resource/ResourceManager.h"
 
 void ObjectLayer::update(float deltaTime) {
-    // 
+    // todo
 }
 
 void ObjectLayer::render() {
@@ -24,13 +24,13 @@ void ObjectLayer::addPortal(const PortalData& portal) {
 void ObjectLayer::renderColliders() {
     auto& renderer = Renderer::getInstance();
 
-    // 仅在调试模式下渲染碰撞体
+    // Only render colliders in debug mode
 #ifdef _DEBUG
     for (const auto& collider : m_colliders) {
         RenderProperties props;
         props.position = collider->getPosition() - m_viewportPosition;
         props.size = collider->getSize();
-        props.color = glm::vec4(1.0f, 0.0f, 0.0f, 0.3f); // 半透明红色
+        props.color = glm::vec4(1.0f, 0.0f, 0.0f, 0.3f); // Semi-transparent red
         renderer.drawRect(props.position, props.size, glm::vec3(props.color));
     }
 #endif
@@ -42,34 +42,33 @@ void ObjectLayer::renderPortals() {
 
     if (!portalTexture) return;
 
-    // 首次初始化
+    // First time initialization
     if (!m_portalSprite) {
         m_portalSprite = std::make_unique<SpriteSheet>(portalTexture, 32, 32);
         m_portalAnimation = std::make_unique<AnimationController>();
 
-        // 创建portal动画
+        // Create portal animation
         auto portalAnim = std::make_unique<Animation>("portal");
         for (int i = 0; i < 6; ++i) {
-            portalAnim->addFrame(i, 0.5f);  // 每帧0.1秒
+            portalAnim->addFrame(i, 0.1f);  // 0.1 seconds per frame
         }
         portalAnim->setLooping(true);
         m_portalAnimation->addAnimation("portal", std::move(portalAnim));
         m_portalAnimation->playAnimation("portal");
     }
 
-    // 更新动画
+    // Update animation
     if (m_portalAnimation) {
-        m_portalAnimation->update(1.0f / 60.0f);  // 假设60fps
+        m_portalAnimation->update(1.0f / 60.0f);  // Assume 60fps
     }
 
-    // 渲染每个传送门
+    // Render each portal
     for (const auto& portal : m_portals) {
         RenderProperties props;
         props.position = portal.position - m_viewportPosition;
         props.size = portal.size;
 
         if (m_portalAnimation) {
-            // 获取当前动画帧的UV坐标
             props.region = m_portalAnimation->getCurrentRegion(*m_portalSprite);
         }
 

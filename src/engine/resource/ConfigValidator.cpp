@@ -8,7 +8,7 @@ bool ConfigValidator::validateAreaConfig(const nlohmann::json& json) {
 
     if (!checkRequiredFields(json, requiredFields)) return false;
 
-    // 验证bounds字段
+    // Validate bounds fields
     std::vector<std::string> boundsFields = { "x", "y", "width", "height" };
     if (!checkRequiredFields(json["bounds"], boundsFields)) return false;
 
@@ -28,7 +28,7 @@ bool ConfigValidator::validateMechanismConfig(const nlohmann::json& json) {
 
         if (!checkRequiredFields(mech, requiredFields)) return false;
 
-        // 根据机关类型验证特定字段
+        // Validate specific fields based on mechanism type
         int type = mech["type"].get<int>();
         switch (type) {
         case 0: // Trigger

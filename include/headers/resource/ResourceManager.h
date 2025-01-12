@@ -103,7 +103,7 @@ private:
     GLenum getGLFormat(int channels);
 
     std::vector<ResourceError> m_errors;
-    void logError(const std::string& message,
-        const std::string& resourceName = "",
-        const std::string& resourcePath = "");
+    //void logError(const std::string& message,
+    //    const std::string& resourceName = "",
+    //    const std::string& resourcePath = "");
 };

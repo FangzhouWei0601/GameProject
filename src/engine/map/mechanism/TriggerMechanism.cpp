@@ -13,13 +13,13 @@ TriggerMechanism::TriggerMechanism(const std::string& id,
     , m_effect(effect)
     , m_effectTimer(0.0f)
 {
-    // 创建默认碰撞体
+    // Create default collider
     auto collider = std::make_unique<BoxCollider>(
-        glm::vec2(0.0f),  // 默认位置
-        glm::vec2(32.0f, 32.0f)  // 默认大小
+        glm::vec2(0.0f),  // Default position
+        glm::vec2(32.0f, 32.0f)  // Default size
     );
 
-    // 设置碰撞层
+    // Set collision layer
     auto triggerLayer = CollisionManager::getInstance().getDefaultLayer(CollisionLayerBits::Trigger);
     collider->setCollisionLayer(triggerLayer.layer);
     collider->setCollisionMask(triggerLayer.mask);
@@ -28,7 +28,7 @@ TriggerMechanism::TriggerMechanism(const std::string& id,
 }
 
 void TriggerMechanism::activate() {
-    DEBUG_LOG("触发器 " << getId() << " 被激活");
+    DEBUG_LOG("Trigger " << getId() << " activated");
     if (m_state != MechanismState::Active) {
         AudioManager::getInstance().playSFX("trigger");
         m_state = MechanismState::Active;
@@ -45,7 +45,7 @@ void TriggerMechanism::deactivate() {
 
 void TriggerMechanism::update(float deltaTime) {
     if (m_state == MechanismState::Active) {
-        // 更新效果持续时间
+        // Update effect duration
         if (m_effect.duration > 0) {
             m_effectTimer += deltaTime;
             if (m_effectTimer >= m_effect.duration) {
@@ -55,17 +55,17 @@ void TriggerMechanism::update(float deltaTime) {
             }
         }
 
-        // 处理周期性效果
+        // Handle periodic effects
         if (m_effect.timing.isPeriodic) {
             applyPeriodicEffect(deltaTime);
         }
 
-        // 处理移动效果
+        // Handle movement effects
         if (m_effect.type == EffectType::MovePlatform) {
             handleMovementEffect(deltaTime);
         }
 
-        // 检查触发条件是否仍然满足
+        // Check if conditions are still satisfied
         if (!checkConditions()) {
             deactivate();
         }
@@ -83,11 +83,11 @@ bool TriggerMechanism::checkConditions() {
         return false;
     }
 
-    // 获取玩家位置
+    // Get player position
     auto* playerCollider = Engine::getInstance().getPlayerCollider();
     if (!playerCollider) return false;
 
-    // 检查玩家是否在触发器范围内
+    // Check if player is within trigger range
     if (m_condition.triggerRadius > 0.0f) {
         glm::vec2 triggerCenter = getCollider()->getPosition() +
             getCollider()->getSize() * 0.5f;
@@ -132,7 +132,7 @@ void TriggerMechanism::applyEffect() {
         break;
     }
     }
-    DEBUG_LOG("触发器应用效果，目标门: " << m_effect.targetId);
+    DEBUG_LOG("Applied trigger effect to target: " << m_effect.targetId);
 }
 
 void TriggerMechanism::removeEffect() {
@@ -146,7 +146,7 @@ void TriggerMechanism::removeEffect() {
     }
 
     case EffectType::MovePlatform: {
-        // 重置平台位置
+        // Reset platform position
         if (auto* collider = getCollider()) {
             collider->setPosition(m_effect.movement.startPos);
         }
@@ -204,39 +204,28 @@ void TriggerMechanism::render() {
     auto* collider = getCollider();
     if (!collider) return;
 
-    // 使用固定的黄色
+    // Use fixed yellow color for trigger visualization
     auto& renderer = Renderer::getInstance();
     renderer.drawRect(
         collider->getPosition(),
         collider->getSize(),
-        glm::vec3(1.0f, 1.0f, 0.0f)  // 纯黄色
+        glm::vec3(1.0f, 1.0f, 0.0f),  // Pure yellow
+        0.3f                           // Alpha
     );
-
-    //std::cout << "Trigger rendered at: "
-    //    << collider->getPosition().x << ", "
-    //    << collider->getPosition().y << std::endl;
 }
 
 bool TriggerMechanism::isPlayerInRange(const BoxCollider* playerCollider) const {
-    //DEBUG_LOG("执行触发器范围检测 - ID: " << getId());
     auto* triggerCollider = getCollider();
     if (!playerCollider || !triggerCollider) return false;
 
-    // 获取玩家中心点位置
+    // Get player center position
     glm::vec2 playerCenter = playerCollider->getPosition() + playerCollider->getSize() * 0.5f;
-    // 获取触发器中心点位置
+    // Get trigger center position
     glm::vec2 triggerCenter = triggerCollider->getPosition() + triggerCollider->getSize() * 0.5f;
 
     float distance = glm::length(playerCenter - triggerCenter);
 
-    //DEBUG_LOG("触发器检测 - 距离: " << distance << ", 所需半径: " << m_condition.triggerRadius);
-
-    // 判断是否在范围内
-    if (distance <= m_condition.triggerRadius) {
-        //DEBUG_LOG("触发器 " << getId() << " 检测到玩家，目标门: " << m_effect.targetId);
-        return true;
-    }
-    return false;
+    return distance <= m_condition.triggerRadius;
 }
 
 void TriggerMechanism::initializeCollider(const glm::vec2& position, const glm::vec2& size) {

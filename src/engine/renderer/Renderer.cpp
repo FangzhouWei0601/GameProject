@@ -208,7 +208,7 @@ void Renderer::initShaders() {
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
-    // 检查着色器编译错误
+    // Check vertex shader compilation error
     GLint success;
     GLchar infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -221,27 +221,27 @@ void Renderer::initShaders() {
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // 检查片段着色器编译错误
+    // Check fragment shader compilation error
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::cout << "Fragment shader compilation failed:\n" << infoLog << std::endl;
     }
 
-    // 链接着色器程序
+    // Link shader program
     m_shaderProgram = glCreateProgram();
     glAttachShader(m_shaderProgram, vertexShader);
     glAttachShader(m_shaderProgram, fragmentShader);
     glLinkProgram(m_shaderProgram);
 
-    // 检查链接错误
+    // Check linking error
     glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(m_shaderProgram, 512, NULL, infoLog);
         std::cout << "Shader program linking failed:\n" << infoLog << std::endl;
     }
 
-    // 清理
+    // Cleanup
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 }

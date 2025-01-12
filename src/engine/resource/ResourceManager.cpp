@@ -3,6 +3,7 @@
 #include <iostream>
 #include "../../../include/headers/resource/ResourceManager.h"
 #include "../../../include/headers/audio/AudioManager.h"
+#include "../../../include/headers/CommonDefines.h"
 
 namespace {
     bool createDirectoryIfNotExists(const std::string& path) {
@@ -13,7 +14,7 @@ namespace {
             return true;
         }
         catch (const std::filesystem::filesystem_error& e) {
-            std::cerr << "Failed to create directory: " << e.what() << std::endl;
+            DEBUG_LOG_ERROR("Failed to create directory : " << e.what());
             return false;
         }
     }
@@ -22,34 +23,31 @@ namespace {
 void ResourceManager::initialize() {
     // Initialize any required systems
     if (!gladLoadGL()) {
-        std::cerr << "Failed to initialize OpenGL context" << std::endl;
+        DEBUG_LOG_ERROR("Failed to initialize OpenGL context");
         return;
     }
 
     m_soundEngine = irrklang::createIrrKlangDevice();
     if (!m_soundEngine) {
-        std::cerr << "Failed to create sound engine!" << std::endl;
+        DEBUG_LOG_ERROR("Failed to create sound engine!");
     }
 
     AudioManager::getInstance().initialize();
 }
 
 bool ResourceManager::loadTexture(const std::string& name, const std::string& path) {
-    // Check if texture already exists
     if (m_textures.find(name) != m_textures.end()) {
-        logError("Texture already loaded", name, path);
+        DEBUG_LOG_ERROR("Texture already loaded", name, path);
         return true;
     }
-    // 确保目录存在
     std::filesystem::path texturePath(path);
     if (!std::filesystem::exists(texturePath.parent_path())) {
         std::filesystem::create_directories(texturePath.parent_path());
-        std::cout << "Created directory: " << texturePath.parent_path().string() << std::endl;
+        DEBUG_LOG("Created directory: " << texturePath.parent_path().string());
     }
 
-    // 检查文件是否存在
     if (!std::filesystem::exists(path)) {
-        logError("Texture file does not exist", name, path);
+        DEBUG_LOG_ERROR("Texture file does not exist", name, path);
         return false;
     }
 
@@ -61,7 +59,7 @@ bool ResourceManager::loadTexture(const std::string& name, const std::string& pa
     int width, height, channels;
     unsigned char* data = loadTextureData(path, width, height, channels);
     if (!data) {
-        logError("Failed to load texture data", name, path);
+        DEBUG_LOG_ERROR("Failed to load texture data", name, path);
         return false;
     }
 
@@ -97,25 +95,21 @@ bool ResourceManager::loadTexture(const std::string& name, const std::string& pa
 
     auto it = m_textures.find(name);
     if (it != m_textures.end()) {
-        // 如果是同一个文件，返回true
-        // 如果是不同文件，返回false或重新加载
-        std::cout << "Texture " << name << " already loaded. Skipping..." << std::endl;
+        DEBUG_LOG("Texture " << name << " already loaded. Skipping...");
         return true;
     }
 
-    std::cout << "Loaded texture: " << name << " (" << width << "x" << height
-        << ", " << channels << " channels)" << std::endl;
+    DEBUG_LOG("Loaded texture: " << name << " (" << width << "x" << height<< ", " << channels << " channels)");
     return true;
 }
 
 TextureData* ResourceManager::getTexture(const std::string& name) {
     auto it = m_textures.find(name);
     if (it != m_textures.end()) {
-        // 只在纹理查找失败时输出信息
         return it->second.get();
     }
-    // 只输出错误信息
-    std::cout << "Texture not found: " << name << std::endl;
+
+    DEBUG_LOG_ERROR("Texture not found: " << name);
     return nullptr;
 }
 
@@ -152,10 +146,9 @@ void ResourceManager::shutdown() {
 
 // Image loading utilities
 unsigned char* ResourceManager::loadTextureData(const std::string& path, int& width, int& height, int& channels) {
-    // Flip images vertically on load (OpenGL expects different texture coordinates)
+    // Flip images vertically on load
     stbi_set_flip_vertically_on_load(true);
 
-    // Load image
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
     if (!data) {
         std::cerr << "Failed to load image: " << path << std::endl;
@@ -175,7 +168,7 @@ GLenum ResourceManager::getGLFormat(int channels) {
     case 3: return GL_RGB;
     case 4: return GL_RGBA;
     default:
-        std::cerr << "Unsupported number of channels: " << channels << std::endl;
+        DEBUG_LOG("Unsupported number of channels:", channels);
         return GL_RGB;
     }
 }
@@ -185,12 +178,9 @@ bool ResourceManager::loadMapConfig(const std::string& mapId, nlohmann::json& ou
     return loadJsonFile(path, outJson);
 }
 
-bool ResourceManager::loadMechanismConfig(const std::string& type,
-    const std::string& id,
-    nlohmann::json& outJson) {
+bool ResourceManager::loadMechanismConfig(const std::string& type, const std::string& id, nlohmann::json& outJson) {
     std::string path = getMechanismPath(type, id);
 
-    // 如果文件不存在，不视为错误
     if (!std::filesystem::exists(path)) {
         return true;
     }
@@ -202,7 +192,7 @@ bool ResourceManager::loadJsonFile(const std::string& path, nlohmann::json& outJ
     try {
         std::ifstream file(path);
         if (!file.is_open()) {
-            std::cerr << "Failed to open file: " << path << std::endl;
+            DEBUG_LOG_ERROR("Failed to open file: " << path);
             return false;
         }
 
@@ -210,7 +200,7 @@ bool ResourceManager::loadJsonFile(const std::string& path, nlohmann::json& outJ
         return true;
     }
     catch (const nlohmann::json::exception& e) {
-        std::cerr << "JSON parsing error: " << e.what() << std::endl;
+        DEBUG_LOG_ERROR("JSON parsing error: " << e.what());
         return false;
     }
 }
@@ -221,13 +211,13 @@ bool ResourceManager::loadSound(const std::string& name, const std::string& path
     // Check if sound already exists
     auto it = m_sounds.find(name);
     if (it != m_sounds.end()) {
-        std::cout << "Sound " << name << " already loaded" << std::endl;
+        DEBUG_LOG_ERROR("Sound " << name << " already loaded");
         return true;
     }
 
     auto source = m_soundEngine->addSoundSourceFromFile(path.c_str());
     if (!source) {
-        std::cerr << "Failed to load sound: " << path << std::endl;
+        DEBUG_LOG_ERROR("Failed to load sound: " << path);
         return false;
     }
 
@@ -246,45 +236,30 @@ void ResourceManager::unloadSound(const std::string& name) {
 }
 
 void ResourceManager::createResourceDirectories() {
-    // 创建基础目录结构
     createDirectoryIfNotExists(getBasePath());
 
-    // 创建纹理目录
     createDirectoryIfNotExists(getTexturePath("characters"));
     createDirectoryIfNotExists(getTexturePath("backgrounds"));
     createDirectoryIfNotExists(getTexturePath("ui"));
 
-    // 创建地图目录
     createDirectoryIfNotExists(getBasePath() + "maps/areas");
     createDirectoryIfNotExists(getBasePath() + "maps/mechanisms/triggers");
     createDirectoryIfNotExists(getBasePath() + "maps/mechanisms/sequences");
 
-    // 创建音频目录
     createDirectoryIfNotExists(getAudioPath("bgm"));
     createDirectoryIfNotExists(getAudioPath("sfx"));
-}
-
-// ResourceManager.cpp
-void ResourceManager::logError(const std::string& message,
-    const std::string& resourceName,
-    const std::string& resourcePath) {
-    m_errors.push_back({ message, resourceName, resourcePath });
-    std::cerr << "Resource Error: " << message;
-    if (!resourceName.empty()) std::cerr << " [" << resourceName << "]";
-    if (!resourcePath.empty()) std::cerr << " Path: " << resourcePath;
-    std::cerr << std::endl;
 }
 
 bool ResourceManager::preloadResources(const std::string& configPath) {
     PreloadConfig config;
     if (!loadPreloadConfig(configPath, config)) {
-        logError("Failed to load preload config", "", configPath);
+        DEBUG_LOG_ERROR("Failed to load preload config", "", configPath);
         return false;
     }
 
     bool success = true;
 
-    // 预加载纹理
+    // Preload Texture
     for (const auto& texturePath : config.textures) {
         std::string name = std::filesystem::path(texturePath).stem().string();
         if (!loadTexture(name, texturePath)) {
@@ -292,7 +267,7 @@ bool ResourceManager::preloadResources(const std::string& configPath) {
         }
     }
 
-    // 预加载音频
+    // Preload audio
     const std::vector<std::pair<std::string, std::string>> soundsToLoad = {
         {"button", "resources/audio/sfx/button.wav"},
         {"trigger", "resources/audio/sfx/trigger.wav"},
@@ -339,7 +314,7 @@ bool ResourceManager::loadPreloadConfig(const std::string& configPath, PreloadCo
         return true;
     }
     catch (const nlohmann::json::exception& e) {
-        logError("Failed to parse preload config: " + std::string(e.what()), "", configPath);
+        DEBUG_LOG_ERROR("Failed to parse preload config: " + std::string(e.what()), "", configPath);
         return false;
     }
 }

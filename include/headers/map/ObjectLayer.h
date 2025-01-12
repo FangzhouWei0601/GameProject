@@ -15,7 +15,6 @@ public:
     void update(float deltaTime) override;
     void render() override;
 
-    // 对象管理
     void addCollider(std::unique_ptr<BoxCollider> collider);
     void addPortal(const PortalData& portal);
     void clearObjects();

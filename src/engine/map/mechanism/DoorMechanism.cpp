@@ -13,8 +13,7 @@ DoorMechanism::DoorMechanism(const std::string& id, const glm::vec2& position, c
     , m_openColor(0.2f, 0.8f, 0.2f, 0.5f)
     , m_lockedColor(0.5f, 0.1f, 0.1f, 1.0f)
 {
-    DEBUG_LOG("Creating door with size: (" << size.x << ", " << size.y << ") at position: ("
-        << position.x << ", " << position.y << ")");
+    DEBUG_LOG("Creating door with size: (" << size.x << ", " << size.y << ") at position: ("<< position.x << ", " << position.y << ")");
     auto collider = std::make_unique<BoxCollider>(position, size);
     auto doorLayer = CollisionManager::getInstance().getDefaultLayer(CollisionLayerBits::Door);
     collider->setCollisionLayer(doorLayer.layer);
@@ -23,7 +22,7 @@ DoorMechanism::DoorMechanism(const std::string& id, const glm::vec2& position, c
 }
 
 void DoorMechanism::activate() {
-    //DEBUG_LOG("尝试激活门 " << getId());
+    //DEBUG_LOG("Attempting to activate door " << getId());
     if (m_doorState == DoorState::Locked) {
         return;
     }
@@ -32,18 +31,18 @@ void DoorMechanism::activate() {
         AudioManager::getInstance().playSFX("door");
         m_doorState = DoorState::Opening;
         m_state = MechanismState::Active;
-        //DEBUG_LOG("门已开始打开");
+        DEBUG_LOG("Door is opening");
     }
 }
 
 void DoorMechanism::deactivate() {
-    DEBUG_LOG("尝试关闭门 " << getId());
+    DEBUG_LOG("Attempting to close door " << getId());
     if (m_doorState == DoorState::Locked) {
         return;
     }
 
     if (m_doorState == DoorState::Open || m_doorState == DoorState::Opening) {
-        DEBUG_LOG("门正在关闭");
+        DEBUG_LOG("Door is closing");
         m_doorState = DoorState::Closing;
         m_state = MechanismState::Inactive;
     }
@@ -76,7 +75,7 @@ void DoorMechanism::updateDoorState(float deltaTime) {
         return;
     }
 
-    // 平滑过渡动画
+    // Smooth transition animation
     float step = speed * deltaTime;
     if (std::abs(targetProgress - m_transitionProgress) <= step) {
         m_transitionProgress = targetProgress;
@@ -107,7 +106,7 @@ void DoorMechanism::updateCollider() {
 }
 
 void DoorMechanism::updateVisuals() {
-    // 可以添加粒子效果或其他视觉反馈
+    // todo: add particle effects or other visual feedback
 }
 
 glm::vec4 DoorMechanism::getCurrentColor() const {
@@ -132,11 +131,10 @@ void DoorMechanism::render() {
     auto* collider = getCollider();
     if (!collider) return;
 
-    
+    // Render door body
     glm::vec4 color = getCurrentColor();
     auto& renderer = Renderer::getInstance();
 
-    // 绘制门的主体
     renderer.drawRect(
         collider->getPosition(),
         collider->getSize(),
@@ -144,9 +142,9 @@ void DoorMechanism::render() {
         color.a
     );
 
-    // 如果是过渡状态，可以添加额外的视觉效果
+    // Add additional visual effects for transition state
     if (m_doorState == DoorState::Opening || m_doorState == DoorState::Closing) {
-        // 添加过渡动画效果
+        // Add transition animation effects
         float effectIntensity = std::sin(m_transitionProgress * glm::pi<float>());
         glm::vec4 effectColor(1.0f, 1.0f, 1.0f, effectIntensity * 0.3f);
 

@@ -13,7 +13,6 @@ Area::Area(const AreaData& data)
 }
 
 void Area::addPortal(const PortalData& portal) {
-    // 验证传送门数据
     if (portal.position.x < 0 || portal.position.y < 0 ||
         portal.size.x <= 0 || portal.size.y <= 0) {
         std::cout << "Attempt to add invalid portal data, ignoring..." << std::endl;
@@ -58,7 +57,6 @@ void Area::render() {
     if (m_layerRenderer) {
         m_layerRenderer->render();
 
-        // 渲染所有机关
         for (const auto& [id, mechanism] : m_mechanisms) {
             if (auto* door = dynamic_cast<DoorMechanism*>(mechanism.get())) {
                 door->render();
@@ -71,16 +69,12 @@ void Area::render() {
 }
 
 void Area::renderMechanisms() {
-    //std::cout << "Rendering mechanisms, count: " << m_mechanisms.size() << std::endl;
     for (const auto& [id, mechanism] : m_mechanisms) {
-        //std::cout << "Mechanism ID: " << id << ", Type: " << static_cast<int>(mechanism->getType()) << std::endl;
 
         if (auto* door = dynamic_cast<DoorMechanism*>(mechanism.get())) {
-            //std::cout << "Successfully cast to DoorMechanism" << std::endl;
             door->render();
         }
         else if (auto* trigger = dynamic_cast<TriggerMechanism*>(mechanism.get())) {
-            //std::cout << "Successfully cast to TriggerMechanism" << std::endl;
             trigger->render();
         }
         else {
@@ -108,7 +102,6 @@ void Area::activateMechanismInRange(const glm::vec2& position, float radius) {
         if (auto* collider = mechanism->getCollider()) {
             glm::vec2 mechanismPos = collider->getPosition();
 
-            // 或者使用 glm::length 计算向量长度
             float distanceSquared = glm::length(position - mechanismPos);
             distanceSquared *= distanceSquared;
 
@@ -129,7 +122,6 @@ bool Area::loadResources() {
     if (!loadBackgroundTexture()) return false;
     if (!loadMechanismConfigs()) return false;
 
-    // 加载音频资源
     const std::vector<std::pair<std::string, std::string>> soundsToLoad = {
         {m_data.id + "_bgm", "resources/audio/bgm/" + m_data.id + ".wav"},
         {m_data.id + "_ambient", "resources/audio/ambient/" + m_data.id + ".wav"}
@@ -159,34 +151,25 @@ void Area::unloadResources() {
     auto& resourceManager = ResourceManager::getInstance();
     resourceManager.unloadTexture(m_data.id + "_bg");
 
-    // Clear mechanisms
-    //m_mechanisms.clear();
-
     // Clear portals and colliders
-    //m_portals.clear();
     m_colliders.clear();
 }
 
 bool Area::loadBackgroundTexture() {
     auto& resourceManager = ResourceManager::getInstance();
 
-    // 修改为一致的文件名格式
     std::string textureName = m_data.id + "_bg";
     std::string texPath = ResourceManager::getTexturePath("backgrounds") + textureName + ".png";
 
-    // 先检查是否已经加载
     if (resourceManager.getTexture(textureName)) {
         return true;  // 纹理已存在，直接返回
     }
 
-    // 检查文件是否存在
     if (!std::filesystem::exists(texPath)) {
-        // 只输出一次错误信息
         std::cout << "Using default background for area: " << m_data.id << std::endl;
-        return true;  // 不视为错误，将使用纯色背景
+        return true; 
     }
 
-    // 加载纹理
     return resourceManager.loadTexture(textureName, texPath);
 }
 
@@ -197,7 +180,6 @@ bool Area::loadMechanismConfigs() {
     }
 
     for (const auto& mech : mechJson["mechanisms"]) {
-        // 机关配置解析代码
     }
 
     return true;
@@ -206,8 +188,7 @@ bool Area::loadMechanismConfigs() {
 bool Area::initializeRenderer() {
     m_layerRenderer = std::make_unique<LayerRenderer>();
 
-    // 添加调试信息
-    std::cout << "Initializing renderer for area: " << m_data.id << std::endl;
+    DEBUG_LOG("Initializing renderer for area: " << m_data.id);
 
     // background
     auto* bgTexture = ResourceManager::getInstance().getTexture(m_data.id + "_bg");
@@ -219,18 +200,15 @@ bool Area::initializeRenderer() {
         m_layerRenderer->addLayer(std::move(bgLayer));
     }
     else {
-        std::cout << "No background texture found for: " << m_data.id + "_bg" << std::endl;
+        DEBUG_LOG_WARN("No background texture found for: " << m_data.id + "_bg");
     }
 
     // object (moving platform)
-    std::cout << "Begin initializing renderer, mechanism count: " << m_mechanisms.size() << std::endl;
     auto objectLayer = std::make_unique<ObjectLayer>();
     objectLayer->setZOrder(1);
     objectLayer->setViewport(glm::vec2(0.0f), glm::vec2(800.0f, 600.0f));
 
-    //std::cout << "Adding " << m_portals.size() << " portals to object layer" << std::endl;
 
-    std::cout << "Re-adding " << m_portals.size() << " portals to object layer" << std::endl;
     for (const auto& portal : m_portals) {
         objectLayer->addPortal(portal);
     }
@@ -247,7 +225,6 @@ bool Area::initializeRenderer() {
 
     m_layerRenderer->addLayer(std::move(objectLayer));
 
-    std::cout << "End initializing renderer, mechanism count: " << m_mechanisms.size() << std::endl;
     return true;
 }
 

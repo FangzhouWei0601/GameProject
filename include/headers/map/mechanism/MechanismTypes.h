@@ -4,63 +4,62 @@
 #include <glm/glm.hpp>
 
 enum class MechanismType {
-    Trigger,        
-    Sequence,       
-    Breakable,      
-    MovingPlatform, 
-    Trap,
-    Door,
-    BuffZone      
+    Trigger,          // Trigger mechanism
+    Sequence,         // Sequence mechanism
+    Breakable,        // Breakable mechanism
+    MovingPlatform,   // Moving platform
+    Trap,             // Trap mechanism
+    Door,             // Door mechanism
+    BuffZone          // Buff zone mechanism
 };
 
 enum class MechanismState {
-    Inactive,   
-    Active,     
-    Finished,   
-    Broken      
+    Inactive,    // Mechanism is inactive
+    Active,      // Mechanism is active
+    Finished,    // Mechanism has finished its action
+    Broken       // Mechanism is broken
 };
 
-
 struct TriggerCondition {
-    bool requiresPlayerPresence = false;  
-    bool requiresInteraction = false;     
-    float triggerRadius = 0.0f;          
+    bool requiresPlayerPresence = false;  // Requires player to be present
+    bool requiresInteraction = false;     // Requires player interaction
+    float triggerRadius = 0.0f;          // Activation radius
 
-
+    // Custom condition callback
     std::function<bool()> customCondition = nullptr;
 };
 
-
 enum class EffectType {
     None,
-    Damage,         // 伤害
-    Heal,          // 治疗
-    Buff,          // 增益
-    Debuff,        // 减益
-    MovePlatform,  // 平台移动
-    OpenGate,      // 开门
-    SpawnEnemy,    // 生成敌人
-    Teleport      // 传送
+    Damage,         // Deals damage
+    Heal,           // Restores health
+    Buff,           // Applies positive effect
+    Debuff,         // Applies negative effect
+    MovePlatform,   // Platform movement
+    OpenGate,       // Opens a gate/door
+    SpawnEnemy,     // Spawns enemy
+    Teleport        // Teleports target
 };
 
 struct MechanismEffect {
     EffectType type = EffectType::None;
-    std::string targetId;        // 影响目标的ID
-    float duration = 0.0f;       // 效果持续时间
-    float value = 0.0f;         // 效果值
-    glm::vec2 direction{ 0.0f };  // 效果方向（如果需要）
+    std::string targetId;         // Target entity ID
+    float duration = 0.0f;        // Effect duration
+    float value = 0.0f;          // Effect value
+    glm::vec2 direction{ 0.0f };  // Effect direction (if needed)
 
-    // 添加效果特定参数
+    // Effect timing parameters
     struct {
-        bool isPeriodic = false;     // 是否周期性生效
-        float interval = 0.0f;       // 周期间隔
-        float lastTriggerTime = 0.0f;// 上次触发时间
+        bool isPeriodic = false;      // Is periodic effect
+        float interval = 0.0f;        // Period interval
+        float lastTriggerTime = 0.0f; // Last trigger time
     } timing;
 
+    // Movement parameters
     struct {
-        glm::vec2 startPos{ 0.0f };   // 起始位置
-        glm::vec2 endPos{ 0.0f };     // 结束位置
-        float speed = 0.0f;         // 移动速度
-        bool isLoop = false;        // 是否循环
+        glm::vec2 startPos{ 0.0f };   // Start position
+        glm::vec2 endPos{ 0.0f };     // End position
+        float speed = 0.0f;           // Movement speed
+        bool isLoop = false;          // Is looping movement
     } movement;
 };

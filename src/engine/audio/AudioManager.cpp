@@ -45,7 +45,7 @@ void AudioManager::playBGM(const std::string& name, bool loop) {
     auto* source = ResourceManager::getInstance().getSound(name);
     if (!source || !m_soundEngine) return;
 
-    stopBGM();  // Í£Ö¹µ±Ç°BGM
+    stopBGM(); 
 
     m_currentBGM = m_soundEngine->play2D(source, loop, true);
     if (m_currentBGM) {

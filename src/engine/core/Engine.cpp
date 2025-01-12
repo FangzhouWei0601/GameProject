@@ -77,17 +77,19 @@ bool Engine::initialize(const std::string& windowTitle, int width, int height) {
 
     auto& resourceManager = ResourceManager::getInstance();
     resourceManager.createResourceDirectories();
+    resourceManager.initialize();
 
     const std::vector<std::pair<std::string, std::string>> texturesToLoad = {
-        {"portal", "E:/zuoye/GameProject/GameProject/x64/Debug/resources/textures/portal/portal.png"},
-        {"test_area_1_bg", "E:/zuoye/GameProject/GameProject/x64/Debug/resources/textures/backgrounds/test_area_1_bg.png"},
-        {"test_area_2_bg", "E:/zuoye/GameProject/GameProject/x64/Debug/resources/textures/backgrounds/test_area_2_bg.png"},
-        {"characterwalk","E:/tmp/texture/Walking_KG_1.png"},
-        {"characteridle","E:/tmp/texture/Idle_KG_1.png"}
+        {"portal", "resources/textures/portal/portal.png"},
+        {"test_area_1_bg", "resources/textures/backgrounds/test_area_1_bg.png"},
+        {"test_area_2_bg", "resources/textures/backgrounds/test_area_2_bg.png"},
+        {"characterwalk","resources/textures/characters/Walking_KG_1.png"},
+        {"characteridle","resources/textures/characters/Idle_KG_1.png"}
     };
 
     const std::vector<std::pair<std::string, std::string>> soundsToLoad = {
-    {"bg", "resources/audio/bgm/background.wav"},
+    {"test_area_1_bgm", "resources/audio/bgm/background.wav"},
+    {"test_area_2_bgm", "resources/audio/bgm/background2.wav"},
     {"trigger", "resources/audio/sfx/trigger.wav"},
     {"door", "resources/audio/sfx/door.wav"}
     };

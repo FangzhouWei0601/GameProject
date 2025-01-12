@@ -139,7 +139,7 @@ bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
 
 bool MapManager::loadArea(const std::string& areaId, const std::string& filePath) {
     std::cout << "Loading area: " << areaId << " from " << filePath << std::endl;
-    // 检查是否已加载
+
     auto it = m_areas.find(areaId);
     if (it != m_areas.end()) {
         auto mechanisms = std::move(it->second->getMechanisms());
@@ -166,7 +166,7 @@ bool MapManager::loadArea(const std::string& areaId, const std::string& filePath
         std::cerr << "Failed to parse area data for: " << areaId << std::endl;
         return false;
     }
-    // 创建区域
+
     auto area = std::make_unique<Area>(areaData);
 
     if (!area->loadResources()) {
@@ -179,7 +179,6 @@ bool MapManager::loadArea(const std::string& areaId, const std::string& filePath
         for (const auto& portalJson : areaJson["portals"]) {
             try {
                 PortalData portal;
-                // 验证必要字段是否存在
                 if (!portalJson.contains("x") || !portalJson.contains("y") ||
                     !portalJson.contains("width") || !portalJson.contains("height")) {
                     std::cout << "Portal data missing required fields, skipping..." << std::endl;
@@ -195,7 +194,7 @@ bool MapManager::loadArea(const std::string& areaId, const std::string& filePath
                 portal.targetPosition.y = portalJson["targetY"].get<float>();
                 portal.isLocked = portalJson.value("locked", false);
 
-                // 验证数据有效性
+
                 if (portal.position.x < 0 || portal.position.y < 0 ||
                     portal.size.x <= 0 || portal.size.y <= 0) {
                     std::cout << "Invalid portal data detected, skipping..." << std::endl;
@@ -217,7 +216,7 @@ bool MapManager::loadArea(const std::string& areaId, const std::string& filePath
             auto type = static_cast<MechanismType>(mechData["type"].get<int>());
             auto id = mechData["id"].get<std::string>();
 
-            // 检查机关ID是否已存在
+
             if (area->getMechanism(id) != nullptr) {
                 DEBUG_LOG_WARN("Mechanism " << id << " already exists in area " << areaId);
                 continue;
@@ -235,14 +234,13 @@ bool MapManager::loadArea(const std::string& areaId, const std::string& filePath
         std::cout << "Loading portals for area: " << areaId << std::endl;
         for (const auto& portalJson : areaJson["portals"]) {
             PortalData portal;
-            // ... 设置portal数据 ...
+
             area->addPortal(portal);
         }
         std::cout << "Area " << areaId << " now has "
             << area->getPortals().size() << " portals" << std::endl;
     }
 
-    // 预加载区域资源
     if (!preloadAreaResources(areaId)) {
         return false;
     }
@@ -253,7 +251,6 @@ bool MapManager::loadArea(const std::string& areaId, const std::string& filePath
         return false;
     }
 
-    // 加载机关和碰撞体
     loadMechanisms(area.get(), areaId);
     loadColliders(area.get(), jsonData);
 
@@ -308,28 +305,25 @@ void MapManager::loadMechanisms(Area* area, const std::string& areaId) {
     nlohmann::json mechJson;
     std::string mechPath = ResourceManager::getMechanismPath("triggers", areaId);
 
-    // 检查机关是否已经加载
     if (area->getMechanisms().size() > 0) {
         DEBUG_LOG_WARN("Area " << areaId << " already has mechanisms loaded.");
         return;
     }
 
-    // 如果区域没有机关配置文件，这是正常的
     if (!std::filesystem::exists(mechPath)) {
         DEBUG_LOG("No mechanism config found for area: " << areaId);
         return;
     }
 
     if (!ResourceManager::getInstance().loadMechanismConfig("triggers", areaId, mechJson)) {
-        DEBUG_LOG_ERROR("Failed to load mechanism config for area: " << areaId);
-        return;
+        DEBUG_LOG_WARN("Failed to load mechanism config for area: " << areaId);
+        return; 
     }
 
     for (const auto& mechData : mechJson["mechanisms"]) {
         auto type = static_cast<MechanismType>(mechData["type"].get<int>());
         auto id = mechData["id"].get<std::string>();
 
-        // 检查机关ID是否已存在
         if (area->getMechanism(id) != nullptr) {
             DEBUG_LOG_WARN("Mechanism " << id << " already exists in area " << areaId);
             continue;
@@ -357,7 +351,7 @@ std::unique_ptr<IMechanism> MapManager::createMechanism(MechanismType type, cons
             mechData["size"]["y"].get<float>()
         );
 
-        DEBUG_LOG("创建机关 " << id << " 类型:" << static_cast<int>(mechType));
+        DEBUG_LOG("Create Mechanism " << id << " type:" << static_cast<int>(mechType));
 
         std::unique_ptr<IMechanism> mechanism;
         switch (mechType) {
@@ -424,7 +418,6 @@ bool MapManager::changeArea(const std::string& areaId, const glm::vec2& position
         (m_currentArea ? m_currentArea->getId() : "None") <<
         " to " << areaId);
 
-    // 停止当前区域的音效
     if (m_currentArea) {
         std::string currentBgm = m_currentArea->getId() + "_bgm";
         std::string currentAmbient = m_currentArea->getId() + "_ambient";
@@ -458,7 +451,6 @@ bool MapManager::changeArea(const std::string& areaId, const glm::vec2& position
 
     m_currentArea = area;
 
-    // 播放新区域音效
     std::string newBgm = areaId + "_bgm";
     std::string newAmbient = areaId + "_ambient";
     auto& audio = AudioManager::getInstance();
@@ -504,57 +496,6 @@ void MapManager::loadColliders(Area* area, const nlohmann::json& json) {
         std::cerr << "Error loading colliders: " << e.what() << std::endl;
     }
 }
-
-//void MapManager::update(float deltaTime) {
-//    if (m_isTransitioning) {
-//        m_transitionEffect->update(deltaTime);
-//        m_loadingScreen->update(deltaTime);
-//
-//        if (m_transitionEffect->isFinished()) {
-//            m_isTransitioning = false;
-//            DEBUG_LOG("Area transition completed");
-//        }
-//    }
-//
-//    auto* playerCollider = Engine::getInstance().getPlayerCollider();
-//    if (!playerCollider) {
-//        DEBUG_LOG_ERROR("Player collider is null!");
-//        return;
-//    }
-//
-//    if (m_currentArea) {
-//        m_currentArea->update(deltaTime);
-//
-//        DEBUG_LOG("当前区域机关数量: " << m_currentArea->getMechanisms().size());
-//
-//        for (auto& [id, mechanism] : m_currentArea->getMechanisms()) {
-//            mechanism->update(deltaTime);
-//
-//            if (auto* trigger = dynamic_cast<TriggerMechanism*>(mechanism.get())) {
-//                DEBUG_LOG("检查触发器 " << id);
-//                DEBUG_LOG("目标门ID: " << trigger->getTargetId());
-//
-//                bool wasInRange = trigger->isActive();
-//                bool isInRange = trigger->isPlayerInRange(playerCollider);
-//
-//                DEBUG_LOG("触发器状态: wasInRange=" << wasInRange << ", isInRange=" << isInRange);
-//
-//                if (isInRange && !wasInRange) {
-//                    DEBUG_LOG("触发器被激活");
-//                    auto* targetDoor = dynamic_cast<DoorMechanism*>(
-//                        m_currentArea->getMechanism(trigger->getTargetId()));
-//                    if (targetDoor) {
-//                        DEBUG_LOG("找到目标门，尝试激活");
-//                        targetDoor->activate();
-//                    }
-//                    else {
-//                        DEBUG_LOG_ERROR("未找到目标门");
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
 
 void MapManager::update(float deltaTime) {
     if (!m_currentArea) return;

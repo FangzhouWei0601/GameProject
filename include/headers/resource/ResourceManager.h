@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <vector>
 #include <iostream>
+#include "../headers/CommonDefines.h"
 
 class ResourceManager {
 public:
@@ -17,14 +18,11 @@ public:
         return instance;
     }
 
-    struct ResourceError {
-        std::string message;
-        std::string resourceName;
-        std::string resourcePath;
-    };
-
-    const std::vector<ResourceError>& getErrors() const { return m_errors; }
-    void clearErrors() { m_errors.clear(); }
+    // Path management methods
+    void setWorkingDirectory(const std::string& path);
+    std::string getWorkingDirectory() const { return m_workingDirectory; }
+    std::string resolvePath(const std::string& relativePath) const;
+    bool initializeWorkingDirectory();
 
     // Texture management
     bool loadTexture(const std::string& name, const std::string& path);
@@ -38,10 +36,9 @@ public:
     void initialize();
     void shutdown();
 
-
-    // path management
+    // Static path helpers
     static std::string getBasePath() {
-        return "resources/";
+        return getInstance().resolvePath("resources/");
     }
 
     static std::string getTexturePath(const std::string& category) {
@@ -56,23 +53,26 @@ public:
         return getBasePath() + "maps/mechanisms/" + type + "/" + id + ".json";
     }
 
-    // mapconfig
+    static std::string getAudioPath(const std::string& type) {
+        return getBasePath() + "audio/" + type + "/";
+    }
+
+    // Config loading
     bool loadMapConfig(const std::string& mapId, nlohmann::json& outJson);
     bool loadMechanismConfig(const std::string& type,
         const std::string& id,
         nlohmann::json& outJson);
 
-    // audio
-    static std::string getAudioPath(const std::string& type) {
-        return getBasePath() + "audio/" + type + "/";
-    }
-
-    // audio resources management
+    // Audio resources management
     bool loadSound(const std::string& name, const std::string& path);
     void unloadSound(const std::string& name);
 
     irrklang::ISoundSource* getSound(const std::string& name) {
         auto it = m_sounds.find(name);
+        if (it == m_sounds.end()) {
+            DEBUG_LOG_ERROR("Sound not found: " << name);
+            return nullptr;
+        }
         return it != m_sounds.end() ? it->second : nullptr;
     }
 
@@ -88,22 +88,19 @@ private:
         std::vector<std::string> maps;
     };
 
+    std::string m_workingDirectory;
     std::unordered_map<std::string, std::unique_ptr<TextureData>> m_textures;
-
     std::unordered_map<std::string, irrklang::ISoundSource*> m_sounds;
     irrklang::ISoundEngine* m_soundEngine;
+
+    // Path utilities
+    std::string getExecutablePath() const;
+    void ensureDirectoryExists(const std::string& path) const;
 
     // Texture loading utilities
     unsigned char* loadTextureData(const std::string& path, int& width, int& height, int& channels);
     void freeTextureData(unsigned char* data);
     bool loadJsonFile(const std::string& path, nlohmann::json& outJson);
-
     bool loadPreloadConfig(const std::string& configPath, PreloadConfig& config);
-
     GLenum getGLFormat(int channels);
-
-    std::vector<ResourceError> m_errors;
-    //void logError(const std::string& message,
-    //    const std::string& resourceName = "",
-    //    const std::string& resourcePath = "");
 };

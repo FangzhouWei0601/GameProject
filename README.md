@@ -27,7 +27,7 @@
 ## Key Technical Components
 
 ### Input Systems
-- Keyboard and gamepad input management
+- Keyboard and gamepad input management (now keyboard only)
 - Multi-device support
 - Configurable action mappings
 
@@ -43,7 +43,7 @@
 - Low-overhead rendering techniques
 
 ## Development Environment
-- Language: Modern C++ (C++17/20)
+- Language: Modern C++ (C++17)
 - Graphics API: OpenGL 4.3+
 - Window Management: GLFW
 - OpenGL Loading: GLAD
@@ -64,12 +64,4 @@
 - IrrKlang
 - nlohmann/json
 
-## Future Roadmap
-1. Enhanced PBR lighting
-2. More complex game mechanics
-3. Expanded procedural generation techniques
-4. Performance and rendering optimizations
-
 ---
-
-**Note**: This prototype demonstrates core game development techniques and OpenGL rendering principles.

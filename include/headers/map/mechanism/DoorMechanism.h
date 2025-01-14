@@ -7,12 +7,12 @@
 class DoorMechanism : public IMechanism {
 public:
     enum class DoorState {
-        Closed,         // 完全关闭
-        Opening,        // 正在打开
-        Open,          // 完全打开
-        Closing,       // 正在关闭
-        Locked,        // 已锁定
-        Malfunction    // 故障状态
+        Closed,         
+        Opening,        
+        Open,          
+        Closing,       
+        Locked,        
+        Malfunction    
     };
     DoorMechanism(const std::string& id, const glm::vec2& position, const glm::vec2& size);
     ~DoorMechanism() override = default;
@@ -32,8 +32,8 @@ private:
     DoorState m_doorState;
     float m_transitionProgress;
     float m_transitionDuration;
-    float m_openSpeed;        // 开门速度
-    float m_closeSpeed;       // 关门速度
+    float m_openSpeed;        
+    float m_closeSpeed;       
 
     glm::vec4 m_closedColor;
     glm::vec4 m_openColor;
@@ -44,7 +44,7 @@ private:
     void updateVisuals();
     glm::vec4 getCurrentColor() const;
 
-    static constexpr float COLLISION_DISABLE_THRESHOLD = 0.8f;  // 碰撞体禁用阈值
-    static constexpr float DOOR_OPEN_SPEED = 2.0f;    // 默认开门速度
-    static constexpr float DOOR_CLOSE_SPEED = 1.5f;   // 默认关门速度
+    static constexpr float COLLISION_DISABLE_THRESHOLD = 0.8f;  
+    static constexpr float DOOR_OPEN_SPEED = 2.0f;    
+    static constexpr float DOOR_CLOSE_SPEED = 1.5f;   
 };

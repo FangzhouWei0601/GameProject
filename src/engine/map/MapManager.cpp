@@ -18,7 +18,6 @@ using json = nlohmann::json;
 
 bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
     try {
-        // 读取JSON文件
         std::ifstream file(filePath);
         if (!file.is_open()) {
             return false;
@@ -27,20 +26,17 @@ bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
         json j;
         file >> j;
 
-        // 解析基本数据
         outData.id = j["id"].get<std::string>();
         outData.name = j["name"].get<std::string>();
         outData.type = static_cast<AreaType>(j["type"].get<int>());
         outData.isUnlocked = j["unlocked"].get<bool>();
 
-        // 解析区域边界
         auto& bounds = j["bounds"];
         outData.bounds.position.x = bounds["x"].get<float>();
         outData.bounds.position.y = bounds["y"].get<float>();
         outData.bounds.size.x = bounds["width"].get<float>();
         outData.bounds.size.y = bounds["height"].get<float>();
 
-        // 解析传送门
         if (j.contains("portals")) {
             for (const auto& portalJson : j["portals"]) {
                 PortalData portal;
@@ -68,7 +64,6 @@ bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
 
                 switch (type) {
                 case MechanismType::Trigger: {
-                    // 创建触发机关
                     TriggerCondition condition;
                     condition.requiresPlayerPresence = mechJson["requiresPlayer"].get<bool>();
                     condition.triggerRadius = mechJson["radius"].get<float>();
@@ -84,7 +79,6 @@ bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
                 }
 
                 case MechanismType::Sequence: {
-                    // 创建序列机关
                     std::vector<std::string> sequence;
                     for (const auto& step : mechJson["sequence"]) {
                         sequence.push_back(step.get<std::string>());
@@ -100,7 +94,6 @@ bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
                 }
                 }
 
-                // 设置机关的碰撞体
                 if (mechJson.contains("collider")) {
                     auto& colliderJson = mechJson["collider"];
                     auto collider = std::make_unique<BoxCollider>(
@@ -112,13 +105,11 @@ bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
                     mechanism->setCollider(std::move(collider));
                 }
 
-                // 添加到区域
                 area->addMechanism(std::move(mechanism));
             }
         }
 
 
-        // 解析碰撞体
         if (j.contains("colliders")) {
             for (const auto& colliderJson : j["colliders"]) {
                 auto collider = std::make_unique<BoxCollider>(
@@ -132,7 +123,6 @@ bool MapManager::loadAreaData(const std::string& filePath, AreaData& outData) {
         return true;
     }
     catch (const json::exception& e) {
-        // 处理JSON解析错误
         return false;
     }
 }
@@ -262,7 +252,6 @@ bool MapManager::loadArea(const std::string& areaId, const std::string& filePath
 
 bool MapManager::parseAreaData(const nlohmann::json& json, AreaData& outData) {
     try {
-        // 检查必需字段
         if (!json.contains("id") || !json.contains("name") ||
             !json.contains("type") || !json.contains("bounds")) {
             std::cerr << "Missing required fields in area data" << std::endl;
@@ -272,7 +261,7 @@ bool MapManager::parseAreaData(const nlohmann::json& json, AreaData& outData) {
         outData.id = json["id"].get<std::string>();
         outData.name = json["name"].get<std::string>();
         outData.type = static_cast<AreaType>(json["type"].get<int>());
-        outData.isUnlocked = json.value("unlocked", true);  // 默认为true
+        outData.isUnlocked = json.value("unlocked", true);  // true
 
         // Parse bounds
         const auto& bounds = json["bounds"];
@@ -463,11 +452,9 @@ bool MapManager::changeArea(const std::string& areaId, const glm::vec2& position
 bool MapManager::preloadAreaResources(const std::string& areaId) {
     auto& resourceManager = ResourceManager::getInstance();
 
-    // 尝试加载背景纹理
     std::string bgPath = ResourceManager::getTexturePath("backgrounds") + areaId + ".png";
     if (!std::filesystem::exists(bgPath)) {
         std::cout << "Using default background for area: " << areaId << std::endl;
-        // 可以在这里加载一个默认的背景纹理
     }
     else {
         if (!resourceManager.loadTexture(areaId + "_bg", bgPath)) {

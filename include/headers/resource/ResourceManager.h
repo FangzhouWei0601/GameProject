@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include "TextureData.h"
-#include <nlohmann/json.hpp>
+#include "../../nlohmann/json.hpp"
 #include <fstream>
 #include <irrklang/irrKlang.h>
 #include <filesystem>

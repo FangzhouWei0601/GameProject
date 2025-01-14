@@ -75,5 +75,6 @@
     <ClInclude Include="include\headers\CommonDefines.h" />
     <ClInclude Include="include\headers\camera\Camera.h" />
     <ClInclude Include="include\headers\audio\AudioManager.h" />
+    <ClInclude Include="include\nlohmann\json.hpp" />
   </ItemGroup>
 </Project>

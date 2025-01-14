@@ -199,11 +199,11 @@ void Engine::handleMovement(float deltaTime) {
             glm::vec2 nextPosition = m_playerPosition + moveDirection * m_moveSpeed * deltaTime;
             glm::vec2 nextColliderPos = nextPosition + getColliderOffset();
 
-            // 保存原始位置
+            // save original position
             glm::vec2 originalPosition = m_playerPosition;
             glm::vec2 originalColliderPos = m_playerCollider->getPosition();
 
-            // 尝试移动
+            // try to move
             m_playerCollider->setPosition(nextColliderPos);
 
             bool canMove = true;

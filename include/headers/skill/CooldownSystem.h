@@ -1,6 +1,6 @@
 #pragma once
 #include "CooldownTypes.h"
-#include "../headers/character/AttributeSystem.h"
+#include "../character/AttributeSystem.h"
 #include <unordered_map>
 
 class CooldownSystem {

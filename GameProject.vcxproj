@@ -207,6 +207,7 @@
     <ClInclude Include="include\headers\resource\TextureData.h" />
     <ClInclude Include="include\headers\skill\CooldownSystem.h" />
     <ClInclude Include="include\headers\skill\CooldownTypes.h" />
+    <ClInclude Include="include\nlohmann\json.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

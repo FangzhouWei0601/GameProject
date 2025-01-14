@@ -21,7 +21,7 @@ const char* texturedVertexShaderSource = R"(
     }
 )";
 
-// Add textured fragment shader
+
 const char* texturedFragmentShaderSource = R"(
     #version 430 core
     in vec2 TexCoord;
@@ -54,9 +54,17 @@ const char* fragmentShaderSource = R"(
     #version 430 core
     uniform vec3 color;
     uniform float alpha;
+    uniform vec2 screenSize;
     out vec4 FragColor;
     void main() {
-        FragColor = vec4(color, alpha);
+        bool isSignatureArea = (gl_FragCoord.x > screenSize.x - 200.0 && 
+                                gl_FragCoord.y < 50.0);
+        
+        if (isSignatureArea) {
+            FragColor = vec4(1.0, 1.0, 1.0, 0.5);
+        } else {
+            FragColor = vec4(color, alpha);
+        }
     }
 )";
 
@@ -180,11 +188,13 @@ void Renderer::drawTexturedQuad(const TextureData* texture, const RenderProperti
     GLint viewLoc = glGetUniformLocation(m_textureShaderProgram, "view");
     GLint projectionLoc = glGetUniformLocation(m_textureShaderProgram, "projection");
     GLint colorLoc = glGetUniformLocation(m_textureShaderProgram, "color");
+    //GLint screenSizeLoc = glGetUniformLocation(m_textureShaderProgram, "screenSize");
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getProjectionMatrix()));
     glUniform4fv(colorLoc, 1, glm::value_ptr(props.color));
+    //glUniform2fv(screenSizeLoc, 1, glm::value_ptr(m_screenSize));
 
     // Bind texture
     glActiveTexture(GL_TEXTURE0);
@@ -285,11 +295,15 @@ void Renderer::drawRect(const glm::vec2& position, const glm::vec2& size, const 
     GLint colorLoc = glGetUniformLocation(m_shaderProgram, "color");
     GLint alphaLoc = glGetUniformLocation(m_shaderProgram, "alpha");
 
+    //GLint screenSizeLoc = glGetUniformLocation(m_shaderProgram, "screenSize");
+
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getViewMatrix()));
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(m_camera->getProjectionMatrix()));
     glUniform3fv(colorLoc, 1, glm::value_ptr(color));
     glUniform1f(alphaLoc, alpha);
+
+    //glUniform2fv(screenSizeLoc, 1, glm::value_ptr(m_screenSize));
 
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

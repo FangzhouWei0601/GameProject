@@ -9,7 +9,7 @@
 #include <filesystem>
 #include <vector>
 #include <iostream>
-#include "../headers/CommonDefines.h"
+#include "../CommonDefines.h"
 
 class ResourceManager {
 public:

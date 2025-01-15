@@ -1,5 +1,5 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include <../../include/stb/stb_image.h>
+#include "../../../include/stb/stb_image.h"
 #include <iostream>
 #include "../../../include/headers/resource/ResourceManager.h"
 #include "../../../include/headers/audio/AudioManager.h"
